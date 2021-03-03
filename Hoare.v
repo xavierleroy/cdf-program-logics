@@ -368,7 +368,23 @@ Proof.
   apply Hoare_while. auto.
 Qed.
 
-(** Some inversion lemmas *)
+(** A frame rule for strong triples.  Used to reason about "for" loops below. *)
+
+Fixpoint assigns (c: com) (x: ident) : Prop :=
+  match c with
+  | SKIP => False
+  | ASSIGN y a => x = y
+  | SEQ c1 c2 => assigns c1 x \/ assigns c2 x
+  | IFTHENELSE b c1 c2 => assigns c1 x \/ assigns c2 x
+  | WHILE b c => assigns c x
+  | ASSERT b => False
+  | HAVOC y => x = y
+  end.
+
+Definition independent (A: assertion) (vars: ident -> Prop) : Prop :=
+  forall (s1 s2: store),
+  (forall x, vars x \/ s1 x = s2 x) ->
+  A s1 -> A s2.
 
 Ltac Tauto :=
   let s := fresh "s" in
@@ -376,6 +392,89 @@ Ltac Tauto :=
   intro s;
   repeat (match goal with [ H: (forall (s': store), _) |- _ ] => specialize (H s) end);
   intuition auto.
+
+Lemma HOARE_frame:
+  forall R P c Q,
+  [[ P ]] c [[ Q ]] ->
+  independent R (assigns c) ->
+  [[ P //\\ R ]] c [[ Q //\\ R ]].
+Proof.
+  intros R.
+  assert (IND_SUB: forall (vars1 vars2: ident -> Prop),
+                   independent R vars1 -> 
+                   (forall x, vars2 x -> vars1 x) ->
+                   independent R vars2).
+  { unfold independent; intros. apply H with s1; auto. intros. destruct (H1 x); auto. }
+  induction 1; intros IND; simpl in IND.
+- apply HOARE_skip.
+- eapply HOARE_consequence with (Q := P //\\ R).
+  apply HOARE_assign.
+  unfold aupdate; intros s [A B]. split. auto. apply IND with s; auto.
+  intros y. unfold update. destruct (string_dec x y); auto.
+  Tauto.
+- apply HOARE_seq with (Q //\\ R).
+  apply IHHOARE1. eapply IND_SUB; eauto. cbn; intros; tauto.
+  apply IHHOARE2. eapply IND_SUB; eauto. cbn; intros; tauto.
+- apply HOARE_ifthenelse.
+  eapply HOARE_consequence with (Q := Q //\\ R).
+  apply IHHOARE1. eapply IND_SUB; eauto. cbn; intros; tauto.
+  Tauto. Tauto.
+  eapply HOARE_consequence with (Q := Q //\\ R).
+  apply IHHOARE2. eapply IND_SUB; eauto. cbn; intros; tauto.
+  Tauto. Tauto.
+- eapply HOARE_consequence with (P := P //\\ R).
+  apply HOARE_while with a. intros.
+  eapply HOARE_consequence. apply (H0 v). auto.
+  Tauto. Tauto. Tauto. Tauto.
+- eapply HOARE_consequence with (Q := Q //\\ R).
+  apply HOARE_havoc. 
+  intros s [A B] n; split. apply A. apply IND with s; auto. 
+  intros y. unfold update. destruct (string_dec x y); auto.
+  Tauto.
+- eapply HOARE_consequence.
+  apply HOARE_assert with (P := P //\\ R). Tauto. Tauto.
+- eapply HOARE_consequence. 
+  apply IHHOARE; auto.
+  intros s [A B]; split; auto.
+  intros s [A B]; split; auto.
+Qed.
+
+(** A counted "for" loop *)
+
+Definition FOR (i: ident) (l: aexp) (h: ident) (c: com) : com :=
+  ASSIGN i l;;
+  WHILE (LESSEQUAL (VAR i) (VAR h)) (c ;; ASSIGN i (PLUS (VAR i) (CONST 1))).
+
+Lemma HOARE_for: forall l h i c P,
+  [[ atrue (LESSEQUAL (VAR i) (VAR h)) //\\ P ]]
+    c
+  [[ aupdate i (PLUS (VAR i) (CONST 1)) P ]] ->
+  ~assigns c i -> ~assigns c h -> i <> h -> 
+  [[ aupdate i l P ]] FOR i l h c [[ afalse (LESSEQUAL (VAR i) (VAR h)) //\\ P ]].
+Proof.
+  intros. apply HOARE_seq with P. apply HOARE_assign.
+  set (variant := PLUS (MINUS (VAR h) (VAR i)) (CONST 1)).
+  apply HOARE_while with (a := variant).
+  intro v.
+  eapply HOARE_seq.
+  eapply HOARE_consequence.
+  apply HOARE_frame with (R := aequal variant v //\\ atrue (LESSEQUAL (VAR i) (VAR h))).
+  eexact H.
+  intros s1 s2 E. unfold aequal, atrue, aand; simpl.
+  destruct (E i) as [A | A]. contradiction. rewrite A.
+  destruct (E h) as [B | B]. contradiction. rewrite B.
+  auto.
+  Tauto.
+  intros s A. eexact A.
+  eapply HOARE_consequence with (Q := alessthan variant v //\\ P).
+  apply HOARE_assign.
+  intros s (A & B & C). unfold aequal in B; simpl in B. unfold atrue in C; simpl in C. apply Z.leb_le in C.
+  split. red; simpl. rewrite update_same. rewrite update_other by auto. lia.
+  exact A.
+  Tauto.
+Qed.
+
+(** Some inversion lemmas *)
 
 Lemma Hoare_skip_inv: forall P Q,
   {{ P }} SKIP {{ Q }} -> (P -->> Q).
