@@ -439,7 +439,7 @@ Proof.
   intros s [A B]; split; auto.
 Qed.
 
-(** A counted "for" loop *)
+(** A counted "for" loop. *)
 
 Definition FOR (i: ident) (l: aexp) (h: ident) (c: com) : com :=
   ASSIGN i l;;
@@ -472,7 +472,7 @@ Proof.
   Tauto.
 Qed.
 
-(** Some inversion lemmas *)
+(** Some inversion lemmas. *)
 
 Lemma Hoare_skip_inv: forall P Q,
   {{ P }} SKIP {{ Q }} -> (P -->> Q).
@@ -541,7 +541,7 @@ Proof.
   exists R; split; Tauto.
 Qed.
 
-(** Some admissible rules *)
+(** Some admissible rules. *)
 
 Lemma Hoare_conj:
   forall c P1 P2 Q1 Q2,
@@ -732,7 +732,7 @@ Qed.
 
 (** ** 2.4. Soundness *)
 
-(** Soundness of Hoare logic, in the style of type soundness proofs *)
+(** *** Soundness of Hoare logic, in the style of type soundness proofs. *)
 
 Module Soundness1.
 
@@ -807,7 +807,7 @@ Qed.
 
 End Soundness1.
 
-(** Soundness of strong Hoare logic, using an inductive "safe" predicate *)
+(** *** Soundness of strong Hoare logic, using an inductive "safe" predicate. *)
 
 Module Soundness2.
 
@@ -940,7 +940,7 @@ Qed.
 
 End Soundness2.
 
-(** Soundness of weak Hoare logic, using a coinductive "safe" predicate *)
+(** *** Soundness of weak Hoare logic, using a coinductive "safe" predicate. *)
 
 Module Soundness3.
 
@@ -1086,7 +1086,7 @@ Qed.
 
 End Soundness3.
 
-(** Soundness of weak Hoare logic, using a step-indexed "safe" predicate *)
+(** *** Soundness of weak Hoare logic, using a step-indexed "safe" predicate. *)
 
 Module Soundness4.
 
@@ -1106,7 +1106,7 @@ Definition triple (P: assertion) (c: com) (Q: assertion) : Prop :=
 
 Notation "{{{ P }}} c {{{ Q }}}" := (triple P c Q) (at level 90, c at next level).
 
-(** Properties of [safe] *)
+(** Properties of [safe]. *)
 
 Lemma safe_mono:
   forall Q n c s, safe Q n c s -> forall n', (n' <= n)%nat -> safe Q n' c s.
@@ -1145,7 +1145,7 @@ Proof.
 - eauto.
 Qed.
 
-(** Deduction rules *)
+(** Deduction rules. *)
 
 Lemma triple_skip: forall P,
       {{{ P }}} SKIP {{{ P }}}.
@@ -1263,7 +1263,8 @@ Module Completeness.
 
 Import Soundness3.
 
-(** A weakest (liberal) precondition, defined using the semantics *)
+(** A weakest (liberal) precondition, defined in terms 
+    of the operational semantics. *)
 
 Definition sem_wp (c: com) (Q: assertion) : assertion :=
   fun s => safe Q c s.
@@ -1286,7 +1287,7 @@ Proof.
 Qed.
 
 (** Show that the triple [ { sem_wp c Q } c { Q } ] is derivable using the rules
-    of Hoare logic *)
+    of Hoare logic. *)
 
 Lemma Hoare_sem_wp:
   forall c Q, {{ sem_wp c Q }} c {{ Q }}.
@@ -1332,7 +1333,7 @@ Proof.
   apply safe_terminated_inv in W'. assumption. red; auto.
 Qed.
 
-(** Relative completeness follows *)
+(** Relative completeness follows. *)
 
 Theorem Hoare_complete:
   forall P c Q, {{{ P }}} c {{{ Q }}} -> {{ P }} c {{ Q }}.
@@ -1348,7 +1349,7 @@ End Completeness.
 
 Module WP.
 
-(** Annotated commands *)
+(** Annotated commands. *)
 
 Inductive com: Type :=
   | SKIP                                     (**r do nothing *)
@@ -1429,8 +1430,7 @@ End WP.
 
 Module SP.
 
-Import WP.  (* for annotated  commands *)
-(** Annotated commands *)
+Import WP.  (**r for annotated commands *)
 
 Fixpoint sp (P: assertion) (c: com) : assertion :=
   match c with

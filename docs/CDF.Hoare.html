@@ -468,7 +468,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">s</span> [<span class="id">A</span> <span class="id">B</span>]; <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">A counted "for" loop </div>
+<div class="doc">A counted "for" loop. </div>
 <br/>
 <span class="kwd">Definition</span> <span class="id"><a name="FOR">FOR</a></span> (<span class="id">i</span>: <span class="id"><a href="CDF.Hoare.html#ident">ident</a></span>) (<span class="id">l</span>: <span class="id"><a href="CDF.Hoare.html#aexp">aexp</a></span>) (<span class="id">h</span>: <span class="id"><a href="CDF.Hoare.html#ident">ident</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Hoare.html#com">com</a></span>) : <span class="id"><a href="CDF.Hoare.html#com">com</a></span> :=<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">i</span> <span class="id">l</span>;;<br/>
@@ -502,7 +502,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="id">Tauto</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Some inversion lemmas </div>
+<div class="doc">Some inversion lemmas. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_skip_inv">Hoare_skip_inv</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{ <span class="id">Q</span> }} -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id">Q</span>).<br/>
@@ -578,7 +578,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="id">exists</span> <span class="id">R</span>; <span class="tactic">split</span>; <span class="id">Tauto</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Some admissible rules </div>
+<div class="doc">Some admissible rules. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_conj">Hoare_conj</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q1</span> <span class="id">Q2</span>,<br/>
@@ -773,7 +773,7 @@ Qed.</div>
 <br/>
 <h2> 2.4. Soundness </h2>
 <br/>
-<div class="doc">Soundness of Hoare logic, in the style of type soundness proofs </div>
+<h3> Soundness of Hoare logic, in the style of type soundness proofs. </h3>
 <br/>
 <span class="kwd">Module</span> <span class="id"><a name="Soundness1">Soundness1</a></span>.<br/>
 <br/>
@@ -852,7 +852,7 @@ Qed.</div>
 <br/>
 <span class="kwd">End</span> <span class="id"><a href="CDF.Hoare.html#Soundness1">Soundness1</a></span>.<br/>
 <br/>
-<div class="doc">Soundness of strong Hoare logic, using an inductive "safe" predicate </div>
+<h3> Soundness of strong Hoare logic, using an inductive "safe" predicate. </h3>
 <br/>
 <span class="kwd">Module</span> <span class="id"><a name="Soundness2">Soundness2</a></span>.<br/>
 <br/>
@@ -995,7 +995,7 @@ Qed.</div>
 <br/>
 <span class="kwd">End</span> <span class="id"><a href="CDF.Hoare.html#Soundness2">Soundness2</a></span>.<br/>
 <br/>
-<div class="doc">Soundness of weak Hoare logic, using a coinductive "safe" predicate </div>
+<h3> Soundness of weak Hoare logic, using a coinductive "safe" predicate. </h3>
 <br/>
 <span class="kwd">Module</span> <span class="id"><a name="Soundness3">Soundness3</a></span>.<br/>
 <br/>
@@ -1154,7 +1154,7 @@ Qed.</div>
 <br/>
 <span class="kwd">End</span> <span class="id"><a href="CDF.Hoare.html#Soundness3">Soundness3</a></span>.<br/>
 <br/>
-<div class="doc">Soundness of weak Hoare logic, using a step-indexed "safe" predicate </div>
+<h3> Soundness of weak Hoare logic, using a step-indexed "safe" predicate. </h3>
 <br/>
 <span class="kwd">Module</span> <span class="id"><a name="Soundness4">Soundness4</a></span>.<br/>
 <br/>
@@ -1174,7 +1174,7 @@ Qed.</div>
 <br/>
 <span class="kwd">Notation</span> "{{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}}" := (<span class="id"><a href="CDF.Hoare.html#Soundness4.triple">triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
 <br/>
-<div class="doc">Properties of <span class="bracket"><span class="id">safe</span></span> </div>
+<div class="doc">Properties of <span class="bracket"><span class="id">safe</span></span>. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.safe_mono">safe_mono</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">Q</span> <span class="id">n</span> <span class="id">c</span> <span class="id">s</span>, <span class="id"><a href="CDF.Hoare.html#Soundness4.safe">safe</a></span> <span class="id">Q</span> <span class="id">n</span> <span class="id">c</span> <span class="id">s</span> -&gt; <span class="kwd">forall</span> <span class="id">n</span>', (<span class="id">n</span>' &lt;= <span class="id">n</span>)%<span class="id">nat</span> -&gt; <span class="id"><a href="CDF.Hoare.html#Soundness4.safe">safe</a></span> <span class="id">Q</span> <span class="id">n</span>' <span class="id">c</span> <span class="id">s</span>.<br/>
@@ -1218,7 +1218,7 @@ Qed.</div>
 - <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Deduction rules </div>
+<div class="doc">Deduction rules. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_skip">triple_skip</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{{ <span class="id">P</span> }}}.<br/>
@@ -1346,7 +1346,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Import</span> <span class="id">Soundness3</span>.<br/>
 <br/>
-<div class="doc">A weakest (liberal) precondition, defined using the semantics </div>
+<div class="doc">A weakest (liberal) precondition, defined in terms 
+    of the operational semantics. </div>
 <br/>
 <span class="kwd">Definition</span> <span class="id"><a name="Completeness.sem_wp">sem_wp</a></span> (<span class="id">c</span>: <span class="id"><a href="CDF.Hoare.html#com">com</a></span>) (<span class="id">Q</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) : <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">s</span> =&gt; <span class="id"><a href="CDF.Hoare.html#Soundness3.safe">safe</a></span> <span class="id">Q</span> <span class="id">c</span> <span class="id">s</span>.<br/>
@@ -1371,7 +1372,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <div class="doc">Show that the triple <span class="bracket"> { <span class="id">sem_wp</span> <span class="id">c</span> <span class="id">Q</span> } <span class="id">c</span> { <span class="id">Q</span> } </span> is derivable using the rules
-    of Hoare logic </div>
+    of Hoare logic. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Completeness.Hoare_sem_wp">Hoare_sem_wp</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">Q</span>, {{ <span class="id"><a href="CDF.Hoare.html#Completeness.sem_wp">sem_wp</a></span> <span class="id">c</span> <span class="id">Q</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
@@ -1418,7 +1419,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness3.safe_terminated_inv">safe_terminated_inv</a></span> <span class="kwd">in</span> <span class="id">W</span>'. <span class="tactic">assumption</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Relative completeness follows </div>
+<div class="doc">Relative completeness follows. </div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="Completeness.Hoare_complete">Hoare_complete</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, {{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}} -&gt; {{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
@@ -1435,7 +1436,7 @@ Qed.</div>
 <br/>
 <span class="kwd">Module</span> <span class="id"><a name="WP">WP</a></span>.<br/>
 <br/>
-<div class="doc">Annotated commands </div>
+<div class="doc">Annotated commands. </div>
 <br/>
 <span class="kwd">Inductive</span> <span class="id"><a name="WP.com">com</a></span>: <span class="kwd">Type</span> :=<br/>
 &nbsp;&nbsp;| <span class="id"><a name="WP.SKIP">SKIP</a></span>                                     <span class="docright">(* do nothing  *)</span><br/>
@@ -1518,8 +1519,7 @@ Qed.</div>
 <br/>
 <span class="kwd">Module</span> <span class="id"><a name="SP">SP</a></span>.<br/>
 <br/>
-<span class="kwd">Import</span> <span class="id">WP</span>.  <br/>
-<div class="doc">Annotated commands </div>
+<span class="kwd">Import</span> <span class="id">WP</span>.  <span class="docright">(* for annotated commands  *)</span><br/>
 <br/>
 <span class="kwd">Fixpoint</span> <span class="id"><a name="SP.sp">sp</a></span> (<span class="id">P</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Hoare.html#WP.com">com</a></span>) : <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">match</span> <span class="id">c</span> <span class="kwd">with</span><br/>
