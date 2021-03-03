@@ -327,15 +327,6 @@ Proof.
   intros. apply Hoare_consequence with (P := P) (Q := Q); unfold aimp; auto.
 Qed.
 
-Lemma Hoare_ifthen: forall b c P Q,
-    {{ atrue b //\\ P }} c {{ Q }} ->
-    afalse b //\\ P -->> Q ->
-    {{ P }} IFTHENELSE b c SKIP {{ Q }}.
-Proof.
-  intros. apply Hoare_ifthenelse; auto.
-  apply Hoare_consequence_pre with Q; auto using Hoare_skip.
-Qed.
-
 Lemma Floyd_assign: forall P x a,
   {{ P }} ASSIGN x a {{ aexists (fun x0 => aexists (fun v =>
                           aequal (VAR x) v //\\
@@ -357,6 +348,15 @@ Qed.
 
 (** Some derived constructs, with proof rules *)
 
+Lemma Hoare_ifthen: forall b c P Q,
+    {{ atrue b //\\ P }} c {{ Q }} ->
+    afalse b //\\ P -->> Q ->
+    {{ P }} IFTHENELSE b c SKIP {{ Q }}.
+Proof.
+  intros. apply Hoare_ifthenelse; auto.
+  apply Hoare_consequence_pre with Q; auto using Hoare_skip.
+Qed.
+
 Definition REPEAT (c: com) (b: bexp) : com :=
   c ;; WHILE b c.
 
@@ -367,30 +367,6 @@ Proof.
   intros. apply Hoare_seq with P. auto.
   apply Hoare_while. auto.
 Qed.
-
-(*
-Definition FOR (i: ident) (lo hi: aexp) (c: com) : com :=
-  ASSIGN i lo ;;
-  WHILE (LESSEQUAL (VAR i) hi) (c ;; ASSIGN i (PLUS (VAR i) (CONST 1))).
-
-Lemma HOARE_for: forall i lo hi c P,
-  (forall vi vhi,
-    [[ aequal (VAR i) vi //\\ aequal hi vhi //\\ atrue (LESSEQUAL (VAR i) hi) //\\ P ]]
-    c
-    [[ aequal (VAR i) vi //\\ aequal hi vhi //\\ P ]]) ->
-  [[ aupdate i lo P ]] FOR i lo hi c [[ afalse (LESSEQUAL (VAR i) hi) //\\ P ]].
-Proof.
-  intros until P; intros HC.
-  unfold FOR. apply HOARE_seq with P. apply HOARE_assign.
-  apply HOARE_while with (a := MINUS hi (VAR i)).
-  intros vv.
-  apply HOARE_seq with (aequal (MINUS hi (VAR i)) vv //\\ P).
-  admit.
-  eapply HOARE_consequence with (Q := alessthan (MINUS hi (VAR i)) vv //\\ P).
-  apply HOARE_assign.
-  unfold aequal, aupdate, alessthan. simpl. intros s [EQ Ps]. split. cbn in EQ.  
-Qed.
-*)
 
 (** Some inversion lemmas *)
 
