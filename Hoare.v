@@ -93,7 +93,7 @@ Inductive com: Type :=
 
 Infix ";;" := SEQ (at level 80, right associativity).
 
-(** Reduction semantics *)
+(** Reduction semantics. *)
 
 Definition update (x: ident) (v: Z) (s: store) : store :=
   fun y => if string_dec x y then v else s y.
@@ -215,7 +215,7 @@ Definition aupdate (x: ident) (a: aexp) (P: assertion) : assertion :=
 Definition aimp (P Q: assertion) : Prop :=
   forall s, P s -> Q s.
 
-(** Quantification *)
+(** Quantification. *)
 
 Definition aexists {A: Type} (P: A -> assertion) : assertion :=
   fun (s: store) => exists (a: A), P a s.
@@ -272,8 +272,8 @@ Inductive Hoare: assertion -> com -> assertion -> Prop :=
 where "{{ P }} c {{ Q }}" := (Hoare P c Q).
 
 (** Here are the rules for strong Hoare logic, defining strong triples
-    [ [[P]] c [[Q]] ].  The only difference with weak triples
-    is the rule for while loops. *)
+    [ [[P]] c [[Q]] ] that guarantee that [c] terminates.
+    The only difference with weak triples is the rule for [while] loops. *)
 
 Reserved Notation "[[ P ]] c [[ Q ]]" (at level 90, c at next level).
 
@@ -346,7 +346,7 @@ Proof.
   cbn; fold v; fold s'; fold s''. rewrite H. split; auto. red; auto.
 Qed.
 
-(** Some derived constructs, with proof rules *)
+(** Some derived constructs, with proof rules. *)
 
 Lemma Hoare_ifthen: forall b c P Q,
     {{ atrue b //\\ P }} c {{ Q }} ->
@@ -383,7 +383,7 @@ Fixpoint assigns (c: com) (x: ident) : Prop :=
 
 Definition independent (A: assertion) (vars: ident -> Prop) : Prop :=
   forall (s1 s2: store),
-  (forall x, vars x \/ s1 x = s2 x) ->
+  (forall x, ~ vars x -> s1 x = s2 x) ->
   A s1 -> A s2.
 
 Ltac Tauto :=
@@ -404,13 +404,13 @@ Proof.
                    independent R vars1 -> 
                    (forall x, vars2 x -> vars1 x) ->
                    independent R vars2).
-  { unfold independent; intros. apply H with s1; auto. intros. destruct (H1 x); auto. }
+  { unfold independent; intros. apply H with s1; auto. }
   induction 1; intros IND; simpl in IND.
 - apply HOARE_skip.
 - eapply HOARE_consequence with (Q := P //\\ R).
   apply HOARE_assign.
   unfold aupdate; intros s [A B]. split. auto. apply IND with s; auto.
-  intros y. unfold update. destruct (string_dec x y); auto.
+  intros y DIFF. rewrite update_other; auto.
   Tauto.
 - apply HOARE_seq with (Q //\\ R).
   apply IHHOARE1. eapply IND_SUB; eauto. cbn; intros; tauto.
@@ -429,7 +429,7 @@ Proof.
 - eapply HOARE_consequence with (Q := Q //\\ R).
   apply HOARE_havoc. 
   intros s [A B] n; split. apply A. apply IND with s; auto. 
-  intros y. unfold update. destruct (string_dec x y); auto.
+  intros y DIFF. rewrite update_other; auto.
   Tauto.
 - eapply HOARE_consequence.
   apply HOARE_assert with (P := P //\\ R). Tauto. Tauto.
@@ -461,9 +461,7 @@ Proof.
   apply HOARE_frame with (R := aequal variant v //\\ atrue (LESSEQUAL (VAR i) (VAR h))).
   eexact H.
   intros s1 s2 E. unfold aequal, atrue, aand; simpl.
-  destruct (E i) as [A | A]. contradiction. rewrite A.
-  destruct (E h) as [B | B]. contradiction. rewrite B.
-  auto.
+  rewrite (E i), (E h) by auto. auto.
   Tauto.
   intros s A. eexact A.
   eapply HOARE_consequence with (Q := alessthan variant v //\\ P).
