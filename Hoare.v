@@ -1,3 +1,5 @@
+(** Hoare logic. *)
+
 From Coq Require Import Arith ZArith Lia Bool String List Program.Equality.
 From Coq Require Import FunctionalExtensionality.
 From CDF Require Import Sequences.

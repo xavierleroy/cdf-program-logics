@@ -1,0 +1,719 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Seplog</title>
+<meta name="description" content="Documentation of Coq module Seplog" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Seplog</h1>
+<div class="coq">
+<div class="doc">Separation logic. </div>
+<br/>
+<span class="id">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html">Bool</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<span class="id">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html">FunctionalExtensionality</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.PropExtensionality.html">PropExtensionality</a></span>.<br/>
+<span class="id">From</span> <span class="id">CDF</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="CDF.Sequences.html">Sequences</a></span> <span class="id"><a href="CDF.Separation.html">Separation</a></span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<h1> 1. A language of pointers </h1>
+<br/>
+<div class="doc">We now define a small programming language to work with pointers to
+    mutable state.  The language has variables, but these variables are
+    immutable.  This in unlike IMP but like ML: mutable variables are
+    expressed as immutable pointers (references) to mutable state. </div>
+<br/>
+<div class="doc">As in ML too, we blur the distinction between expressions and commands.
+    Every command returns a value, which we take to be an integer,
+    in addition to possibly performing effects. </div>
+<br/>
+<div class="doc">We use higher-order abstract syntax to represent commands in this
+    language.  With first-order abstract syntax, a "let" binding
+    <span class="bracket"><span class="kwd">let</span> <span class="id">x</span> = <span class="id">a</span> <span class="kwd">in</span> <span class="id">b</span></span> would be represented using the constructor 
+<pre>
+    LET: forall (x: ident) (a b: com), com</pre>
+    With higher-order syntax, we use a Coq function <span class="bracket"><span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">b</span></span> to
+    represent the binding of <span class="bracket"><span class="id">x</span></span> inside <span class="bracket"><span class="id">b</span></span>:
+<pre>
+    LET: forall (a: com) (b: Z -&gt; com), com</pre>
+    As a benefit, we can use any Coq expression of type <span class="bracket"><span class="id">Z</span></span> as a
+    pure command of the language, making it unnecessary to define
+    syntax and semantics for a specific expression language.
+</div>
+<br/>
+<span class="kwd">CoInductive</span> <span class="id"><a name="com">com</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="PURE">PURE</a></span> (<span class="id">x</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>)                         <span class="docright">(* command without effects  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LET">LET</a></span> (<span class="id">c</span>: <span class="id">com</span>) (<span class="id">f</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id">com</span>)          <span class="docright">(* sequencing of commands  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="IFTHENELSE">IFTHENELSE</a></span> (<span class="id">b</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) (<span class="id">c1</span> <span class="id">c2</span>: <span class="id">com</span>)      <span class="docright">(* conditional  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALLOC">ALLOC</a></span> (<span class="id">sz</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>)                     <span class="docright">(* allocate <span class="bracket"><span class="id">sz</span></span> words of storage  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="GET">GET</a></span> (<span class="id">l</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>)                       <span class="docright">(* dereference a pointer  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="SET">SET</a></span> (<span class="id">l</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) (<span class="id">v</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>)                <span class="docright">(* assign through a pointer  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="FREE">FREE</a></span> (<span class="id">l</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>)                      <span class="docright">(* free one word of storage  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="PICK">PICK</a></span> (<span class="id">n</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>).                        <span class="docright">(* pick a number between 0 and <span class="bracket"><span class="id">n</span></span>  *)</span><br/>
+<br/>
+<div class="doc">Some derived forms. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="SKIP">SKIP</a></span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span> := <span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> 0.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="SEQ">SEQ</a></span> (<span class="id">c1</span> <span class="id">c2</span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span>) := <span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c1</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">c2</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="EITHER">EITHER</a></span> (<span class="id">c1</span> <span class="id">c2</span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span>) := <span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> (<span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> 2) (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">n</span> <span class="id">c1</span> <span class="id">c2</span>).<br/>
+<br/>
+<div class="doc">Reduction semantics. </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="tactic">red</span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span> * <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> -&gt; <span class="id"><a href="CDF.Seplog.html#com">com</a></span> * <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_pick">red_pick</a></span>: <span class="kwd">forall</span> <span class="id">n</span> <span class="id">i</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id">i</span> &lt; <span class="id">n</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> <span class="id">n</span>, <span class="id">h</span>) (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">i</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_let_done">red_let_done</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">f</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">x</span>) <span class="id">f</span>, <span class="id">h</span>) (<span class="id">f</span> <span class="id">x</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_let_step">red_let_step</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">f</span> <span class="id">h</span> <span class="id">c</span>' <span class="id">h</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id">c</span>, <span class="id">h</span>) (<span class="id">c</span>', <span class="id">h</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span>, <span class="id">h</span>) (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span>' <span class="id">f</span>, <span class="id">h</span>')<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_ifthenelse">red_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>, <span class="id">h</span>) ((<span class="kwd">if</span> <span class="id">b</span> =? 0 <span class="kwd">then</span> <span class="id">c2</span> <span class="kwd">else</span> <span class="id">c1</span>), <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_alloc">red_alloc</a></span>: <span class="kwd">forall</span> <span class="id">sz</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>) <span class="id">l</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">i</span>, <span class="id">l</span> &lt;= <span class="id">i</span> &lt; <span class="id">l</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">sz</span> -&gt; <span class="id">h</span> <span class="id">i</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">l</span> &lt;&gt; 0 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#ALLOC">ALLOC</a></span> <span class="id">sz</span>, <span class="id">h</span>) (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">l</span>, <span class="id"><a href="CDF.Separation.html#hinit">hinit</a></span> <span class="id">l</span> <span class="id">sz</span> <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_get">red_get</a></span>: <span class="kwd">forall</span> <span class="id">l</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>) <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">h</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> <span class="id">l</span>, <span class="id">h</span>) (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">v</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_set">red_set</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">h</span> <span class="id">l</span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> <span class="id">l</span> <span class="id">v</span>, <span class="id">h</span>) (<span class="id"><a href="CDF.Seplog.html#SKIP">SKIP</a></span>, <span class="id"><a href="CDF.Separation.html#hupdate">hupdate</a></span> <span class="id">l</span> <span class="id">v</span> <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="red_free">red_free</a></span>: <span class="kwd">forall</span> <span class="id">l</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">h</span> <span class="id">l</span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">red</span> (<span class="id"><a href="CDF.Seplog.html#FREE">FREE</a></span> <span class="id">l</span>, <span class="id">h</span>) (<span class="id"><a href="CDF.Seplog.html#SKIP">SKIP</a></span>, <span class="id"><a href="CDF.Separation.html#hfree">hfree</a></span> <span class="id">l</span> <span class="id">h</span>).<br/>
+<br/>
+<div class="doc">Absence of run-time errors. <span class="bracket"><span class="id">immsafe</span> <span class="id">c</span> <span class="id">h</span></span> holds if <span class="bracket"><span class="id">c</span> / <span class="id">h</span></span> is not
+    going to abort immediately on a run-time error, such as dereferencing 
+    an invalid pointer. </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="immsafe">immsafe</a></span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span> * <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_pure">immsafe_pure</a></span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">v</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_let">immsafe_let</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">f</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">immsafe</span> (<span class="id">c</span>, <span class="id">h</span>) -&gt; <span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_ifthenelse">immsafe_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_alloc">immsafe_alloc</a></span>: <span class="kwd">forall</span> <span class="id">sz</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>) <span class="id">l</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">l</span> &lt;&gt; 0 -&gt; (<span class="kwd">forall</span> <span class="id">i</span>, <span class="id">l</span> &lt;= <span class="id">i</span> &lt; <span class="id">l</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">sz</span> -&gt; <span class="id">h</span> <span class="id">i</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#ALLOC">ALLOC</a></span> <span class="id">sz</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_get">immsafe_get</a></span>: <span class="kwd">forall</span> <span class="id">l</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">h</span> <span class="id">l</span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> -&gt; <span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> <span class="id">l</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_set">immsafe_set</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">h</span> <span class="id">l</span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> -&gt; <span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> <span class="id">l</span> <span class="id">v</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_free">immsafe_free</a></span>: <span class="kwd">forall</span> <span class="id">l</span> (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">h</span> <span class="id">l</span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> -&gt; <span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#FREE">FREE</a></span> <span class="id">l</span>, <span class="id">h</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="immsafe_pick">immsafe_pick</a></span>: <span class="kwd">forall</span> <span class="id">n</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">immsafe</span> (<span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> <span class="id">n</span>, <span class="id">h</span>).<br/>
+<br/>
+<h1> 2.  The rules of separation logic </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="precond">precond</a></span> := <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="postcond">postcond</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>.<br/>
+<br/>
+<h2> 2.1.  Semantic definition of strong triples </h2>
+<br/>
+<div class="doc">Instead of axiomatizing the rules of separation logic, then prove
+    their soundness against the operational semantics, we define
+    strong triples <span class="bracket"> [[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] </span> directly in terms of the
+    operational semantics, then show the rules of separation logic as
+    lemmas about these semantic triples. </div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">safe</span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span></span> holds if <span class="bracket"><span class="id">c</span></span> started in <span class="bracket"><span class="id">h</span></span> always terminates without errors,
+    and when it terminates with value <span class="bracket"><span class="id">v</span></span>, the postcondition <span class="bracket"><span class="id">Q</span> <span class="id">v</span></span> holds
+    of the final heap. </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="safe">safe</a></span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span> -&gt; <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> -&gt; <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="safe_done">safe_done</a></span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">h</span> (<span class="id">Q</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Q</span> <span class="id">v</span> <span class="id">h</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">safe</span> (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">v</span>) <span class="id">h</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="safe_step">safe_step</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">c</span> <span class="kwd">with</span> <span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span> | <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span> <span class="kwd">end</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#immsafe">immsafe</a></span> (<span class="id">c</span>, <span class="id">h</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">c</span>' <span class="id">h</span>', <span class="tactic">red</span> (<span class="id">c</span>, <span class="id">h</span>) (<span class="id">c</span>', <span class="id">h</span>') -&gt; <span class="id">safe</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">Q</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">safe</span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span>.<br/>
+<br/>
+<div class="doc">We could try to define semantic triples like we did for Hoare logic:
+<pre>
+    Definition triple (P: precond) (c: com) (Q: postcond) :=
+     forall h, P h -&gt; safe c h Q.</pre>
+    However, this definition does not validate the frame rule.
+    There are reductions, namely <span class="bracket"><span class="id">ALLOC</span> <span class="id">sz</span> / <span class="id">h</span> --&gt; <span class="id">PURE</span> <span class="id">l</span> / <span class="id">h</span>'</span>,
+    that we can do from a "small" heap <span class="bracket"><span class="id">h</span></span> but can no longer do from a
+    larger heap <span class="bracket"><span class="id">hunion</span> <span class="id">h</span> <span class="id">hf</span></span> obtained by framing.
+    (This happens if the location <span class="bracket"><span class="id">l</span></span> is fresh in <span class="bracket"><span class="id">h</span></span> but not in <span class="bracket"><span class="id">hf</span></span>.). </div>
+<br/>
+<div class="doc">Instead, we define our separation triples <span class="bracket"> [[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] </span>
+    as Hoare triples plus framing: </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Hoare">Hoare</a></span> (<span class="id">P</span>: <span class="id"><a href="CDF.Seplog.html#precond">precond</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span>) (<span class="id">Q</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h</span>, <span class="id">P</span> <span class="id">h</span> -&gt; <span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="triple">triple</a></span> (<span class="id">P</span>: <span class="id"><a href="CDF.Seplog.html#precond">precond</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Seplog.html#com">com</a></span>) (<span class="id">Q</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">R</span>: <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>), <span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> (<span class="id">P</span> ** <span class="id">R</span>) <span class="id">c</span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; <span class="id">Q</span> <span class="id">v</span> ** <span class="id">R</span>).<br/>
+<br/>
+<span class="kwd">Notation</span> "[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]]" := (<span class="id"><a href="CDF.Seplog.html#triple">triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
+<br/>
+<div class="doc">This definition validates the frame rule. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_frame">triple_frame</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ** <span class="id">R</span> ]] <span class="id">c</span> [[ <span class="kwd">fun</span> <span class="id">v</span> =&gt; <span class="id">Q</span> <span class="id">v</span> ** <span class="id">R</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof106')">Proof.</div>
+<div class="proofscript" id="proof106">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">TR</span> <span class="id">R</span>'. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; (<span class="id">Q</span> <span class="id">v</span> ** <span class="id">R</span>) ** <span class="id">R</span>') <span class="kwd">with</span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; <span class="id">Q</span> <span class="id">v</span> ** (<span class="id">R</span> ** <span class="id">R</span>')).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">TR</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html#functional_extensionality">functional_extensionality</a></span>; <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">inv</span> <span class="id">H</span> := <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+<br/>
+<h2> 2.2. The "small rules" for heap operations </h2>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_get">triple_get</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">l</span> <span class="id">v</span> ]] <span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> <span class="id">l</span> [[ <span class="kwd">fun</span> <span class="id">v</span>' =&gt; (<span class="id">v</span>' = <span class="id">v</span>) //\\ <span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">l</span> <span class="id">v</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof107')">Proof.</div>
+<div class="proofscript" id="proof107">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">l</span> <span class="id">v</span> <span class="id">R</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">H1</span> &amp; <span class="id">H2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">L1</span>: <span class="id">h1</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">red</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">subst</span> <span class="id">h1</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#hupdate_same">hupdate_same</a></span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">L</span>: <span class="id">h</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id">U</span>; <span class="tactic">simpl</span>. <span class="tactic">rewrite</span> <span class="id">L1</span>; <span class="tactic">auto</span>. } <br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">constructor</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>. <span class="id">inv</span> <span class="id">RED</span>. <span class="id">constructor</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">h1</span>, <span class="id">h2</span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#pureconj">pureconj</a></span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_set">triple_set</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Separation.html#valid">valid</a></span> <span class="id">l</span> ]] <span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> <span class="id">l</span> <span class="id">v</span> [[ <span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">l</span> <span class="id">v</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof108')">Proof.</div>
+<div class="proofscript" id="proof108">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">l</span> <span class="id">v</span> <span class="id">R</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">H1</span> &amp; <span class="id">H2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H1</span> <span class="kwd">as</span> (<span class="id">v0</span> &amp; <span class="id">H1</span>). <span class="tactic">red</span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">L1</span>: <span class="id">h1</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v0</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">subst</span> <span class="id">h1</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#hupdate_same">hupdate_same</a></span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">L</span>: <span class="id">h</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v0</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">U</span>; <span class="id">cbn</span>. <span class="tactic">rewrite</span> <span class="id">L1</span>; <span class="tactic">auto</span>. } <br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">constructor</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>. <span class="id">inv</span> <span class="id">RED</span>. <span class="id">constructor</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="CDF.Separation.html#hupdate">hupdate</a></span> <span class="id">l</span> <span class="id">v</span> <span class="id"><a href="CDF.Separation.html#hempty">hempty</a></span>), <span class="id">h2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">red</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">intro</span> <span class="id">l</span>'. <span class="id">specialize</span> (<span class="id">D</span> <span class="id">l</span>'). <span class="id">cbn</span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> <span class="id">D</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>'); <span class="tactic">auto</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">l</span>'; <span class="id">cbn</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>'); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="valid_N">valid_N</a></span> (<span class="id">l</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) (<span class="id">sz</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) : <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">sz</span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> =&gt; <span class="id"><a href="CDF.Separation.html#emp">emp</a></span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">sz</span> =&gt; <span class="id"><a href="CDF.Separation.html#valid">valid</a></span> <span class="id">l</span> ** <span class="id">valid_N</span> (<span class="id">l</span> + 1) <span class="id">sz</span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Remark</span> <span class="id"><a name="valid_N_init">valid_N_init</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">R</span>: <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>) <span class="id">sz</span> <span class="id">l</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;<span class="id">R</span> <span class="id">h</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">i</span>, <span class="id">l</span> &lt;= <span class="id">i</span> &lt; <span class="id">l</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">sz</span> -&gt; <span class="id">h</span> <span class="id">i</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="id"><a href="CDF.Seplog.html#valid_N">valid_N</a></span> <span class="id">l</span> <span class="id">sz</span> ** <span class="id">R</span>) (<span class="id"><a href="CDF.Separation.html#hinit">hinit</a></span> <span class="id">l</span> <span class="id">sz</span> <span class="id">h</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof109')">Proof.</div>
+<div class="proofscript" id="proof109">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">sz</span> <span class="kwd">as</span> [ | <span class="id">sz</span>]; <span class="tactic">intros</span> <span class="id">l</span> <span class="id">h</span> <span class="id">Rh</span> <span class="id">EMPTY</span>; <span class="id">cbn</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>. <span class="tactic">auto</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="id">exists</span> (<span class="id"><a href="CDF.Separation.html#hupdate">hupdate</a></span> <span class="id">l</span> 0 <span class="id"><a href="CDF.Separation.html#hempty">hempty</a></span>), (<span class="id"><a href="CDF.Separation.html#hinit">hinit</a></span> (<span class="id">l</span> + 1) <span class="id">sz</span> <span class="id">h</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="id">exists</span> 0. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id">IHsz</span>. <span class="tactic">auto</span>. <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">EMPTY</span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">intros</span> <span class="id">x</span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#hupdate">hupdate</a></span>, <span class="id"><a href="CDF.Separation.html#hempty">hempty</a></span>; <span class="id">cbn</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">x</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hinit_outside">hinit_outside</a></span> <span class="tactic">by</span> <span class="id">lia</span>. <span class="tactic">apply</span> <span class="id">EMPTY</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">x</span>. <span class="id">cbn</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">x</span>); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_alloc">triple_alloc</a></span>: <span class="kwd">forall</span> <span class="id">sz</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Separation.html#emp">emp</a></span> ]]<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#ALLOC">ALLOC</a></span> <span class="id">sz</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">l</span> =&gt; (<span class="id">l</span> &lt;&gt; 0) //\\ <span class="id"><a href="CDF.Seplog.html#valid_N">valid_N</a></span> <span class="id">l</span> <span class="id">sz</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof110')">Proof.</div>
+<div class="proofscript" id="proof110">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">sz</span> <span class="id">R</span> <span class="id">h</span> <span class="id">H</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+- <span class="tactic">destruct</span> (<span class="id"><a href="CDF.Separation.html#isfinite">isfinite</a></span> <span class="id">h</span>) <span class="kwd">as</span> (<span class="id">l0</span> &amp; <span class="id">FIN</span>). <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#immsafe_alloc">immsafe_alloc</a></span> <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.max">Z.max</a></span> <span class="id">l0</span> 1); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;+ <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id">FIN</span>. <span class="id">lia</span>.<br/>
+- <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>; <span class="id">inv</span> <span class="id">RED</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>; <span class="tactic">split</span>. <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#valid_N_init">valid_N_init</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_free">triple_free</a></span>: <span class="kwd">forall</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Separation.html#valid">valid</a></span> <span class="id">l</span> ]]<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#FREE">FREE</a></span> <span class="id">l</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="CDF.Separation.html#emp">emp</a></span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof111')">Proof.</div>
+<div class="proofscript" id="proof111">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">l</span> <span class="id">R</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">H1</span> &amp; <span class="id">H2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H1</span> <span class="kwd">as</span> (<span class="id">v0</span> &amp; <span class="id">H1</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">L1</span>: <span class="id">h1</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v0</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">H1</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#hupdate_same">hupdate_same</a></span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">L</span>: <span class="id">h</span> <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v0</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">U</span>; <span class="id">cbn</span>. <span class="tactic">rewrite</span> <span class="id">L1</span>. <span class="tactic">auto</span>. } <br/>
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+- <span class="id">constructor</span>. <span class="tactic">congruence</span>. <br/>
+- <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>; <span class="id">inv</span> <span class="id">RED</span>. <span class="id">constructor</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="CDF.Separation.html#hfree">hfree</a></span> <span class="id">l</span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h2</span>)) <span class="kwd">with</span> <span class="id">h2</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">x</span>. <span class="tactic">generalize</span> (<span class="id">D</span> <span class="id">x</span>); <span class="tactic">rewrite</span> <span class="id">H1</span>; <span class="id">cbn</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">x</span>); <span class="tactic">auto</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<h2> 2.3. Properties of the <span class="bracket"><span class="id">safe</span></span> predicate </h2>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_pure">safe_pure</a></span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">h</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">v</span>) <span class="id">h</span> <span class="id">Q</span> -&gt; <span class="id">Q</span> <span class="id">v</span> <span class="id">h</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof112')">Proof.</div>
+<div class="proofscript" id="proof112">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>. <br/>
+- <span class="tactic">auto</span>.<br/>
+- <span class="id">contradiction</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_red">safe_red</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span> <span class="id">c</span>' <span class="id">h</span>',<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#safe">safe</a></span>  <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span> -&gt; <span class="tactic">red</span> (<span class="id">c</span>, <span class="id">h</span>) (<span class="id">c</span>', <span class="id">h</span>') -&gt; <span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">Q</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof113')">Proof.</div>
+<div class="proofscript" id="proof113">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+- <span class="id">inv</span> <span class="id">H0</span>.<br/>
+- <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_immsafe">safe_immsafe</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span> -&gt; <span class="id"><a href="CDF.Seplog.html#immsafe">immsafe</a></span> (<span class="id">c</span>, <span class="id">h</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof114')">Proof.</div>
+<div class="proofscript" id="proof114">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+- <span class="id">constructor</span>.<br/>
+- <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_let">safe_let</a></span>: <span class="kwd">forall</span> (<span class="id">Q</span> <span class="id">R</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>) <span class="id">f</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span> <span class="id">h</span>', <span class="id">Q</span> <span class="id">v</span> <span class="id">h</span>' -&gt; <span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> (<span class="id">f</span> <span class="id">v</span>) <span class="id">h</span>' <span class="id">R</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">h</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span>) <span class="id">h</span> <span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof115')">Proof.</div>
+<div class="proofscript" id="proof115">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">f</span> <span class="id">POST</span>. <span class="tactic">induction</span> 1.<br/>
+- <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id">constructor</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>; <span class="id">inv</span> <span class="id">RED</span>. <span class="tactic">apply</span> <span class="id">POST</span>; <span class="tactic">auto</span>. <span class="id">inv</span> <span class="id">H1</span>.<br/>
+- <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>; <span class="id">inv</span> <span class="id">RED</span>. <span class="id">contradiction</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_consequence">safe_consequence</a></span>: <span class="kwd">forall</span> (<span class="id">Q</span> <span class="id">Q</span>': <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>),<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span>, <span class="id">Q</span> <span class="id">v</span> --&gt;&gt; <span class="id">Q</span>' <span class="id">v</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">h</span>, <span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span> -&gt; <span class="id"><a href="CDF.Seplog.html#safe">safe</a></span> <span class="id">c</span> <span class="id">h</span> <span class="id">Q</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof116')">Proof.</div>
+<div class="proofscript" id="proof116">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">Q</span> <span class="id">Q</span>' <span class="id">IMP</span>. <span class="tactic">induction</span> 1.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#safe_done">safe_done</a></span>. <span class="tactic">apply</span> <span class="id">IMP</span>. <span class="tactic">assumption</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#safe_step">safe_step</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h2> 2.4. Rules for control structures </h2>
+<br/>
+<div class="doc">Proof plan: first show Hoare-style rules for the <span class="bracket"><span class="id">Hoare</span></span> triple,
+    then frame by an arbitrary <span class="bracket"><span class="id">R</span></span> to obtain the separation triple. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hoare_pure">Hoare_pure</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">v</span> (<span class="id">Q</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>),<br/>
+&nbsp;&nbsp;<span class="id">P</span> --&gt;&gt; <span class="id">Q</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span> (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">v</span>) <span class="id">Q</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof117')">Proof.</div>
+<div class="proofscript" id="proof117">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">h</span> <span class="id">Ph</span>. <span class="id">constructor</span>. <span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_pure">triple_pure</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">v</span> (<span class="id">Q</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>),<br/>
+&nbsp;&nbsp;<span class="id">P</span> --&gt;&gt; <span class="id">Q</span> <span class="id">v</span> -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">v</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof118')">Proof.</div>
+<div class="proofscript" id="proof118">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">R</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#Hoare_pure">Hoare_pure</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#sepconj_imp_l">sepconj_imp_l</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hoare_let">Hoare_let</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">f</span> (<span class="id">P</span>: <span class="id"><a href="CDF.Seplog.html#precond">precond</a></span>) (<span class="id">Q</span> <span class="id">R</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span>, <span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> (<span class="id">Q</span> <span class="id">v</span>) (<span class="id">f</span> <span class="id">v</span>) <span class="id">R</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span> (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span>) <span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof119')">Proof.</div>
+<div class="proofscript" id="proof119">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">R</span>; <span class="tactic">intros</span> <span class="id">HR1</span> <span class="id">HR2</span> <span class="id">h</span> <span class="id">Ph</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#safe_let">safe_let</a></span> <span class="kwd">with</span> <span class="id">Q</span>. <span class="tactic">apply</span> <span class="id">HR2</span>. <span class="tactic">apply</span> <span class="id">HR1</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_let">triple_let</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">f</span> (<span class="id">P</span>: <span class="id"><a href="CDF.Seplog.html#precond">precond</a></span>) (<span class="id">Q</span> <span class="id">R</span>: <span class="id"><a href="CDF.Seplog.html#postcond">postcond</a></span>),<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span>, [[ <span class="id">Q</span> <span class="id">v</span> ]] <span class="id">f</span> <span class="id">v</span> [[ <span class="id">R</span> ]]) -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span> [[ <span class="id">R</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof120')">Proof.</div>
+<div class="proofscript" id="proof120">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">c</span> <span class="id">f</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">TR1</span> <span class="id">TR2</span> <span class="id">R</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#Hoare_let">Hoare_let</a></span> <span class="kwd">with</span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; <span class="id">Q</span> <span class="id">v</span> ** <span class="id">R</span>').<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">TR1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">TR2</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hoare_ifthenelse">Hoare_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> ((<span class="id">b</span> &lt;&gt; 0) //\\ <span class="id">P</span>) <span class="id">c1</span> <span class="id">Q</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> ((<span class="id">b</span> = 0) //\\ <span class="id">P</span>) <span class="id">c2</span> <span class="id">Q</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span> (<span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>) <span class="id">Q</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof121')">Proof.</div>
+<div class="proofscript" id="proof121">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">Q</span>; <span class="tactic">intros</span> <span class="id">HR1</span> <span class="id">HR2</span> <span class="id">h</span> <span class="id">Ph</span>. <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+- <span class="id">constructor</span>.<br/>
+- <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>; <span class="id">inv</span> <span class="id">RED</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_spec">Z.eqb_spec</a></span> <span class="id">b</span> 0).<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id">HR2</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id">HR1</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_ifthenelse">triple_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;[[ (<span class="id">b</span> &lt;&gt; 0) //\\ <span class="id">P</span> ]] <span class="id">c1</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;[[ (<span class="id">b</span> = 0) //\\ <span class="id">P</span> ]] <span class="id">c2</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof122')">Proof.</div>
+<div class="proofscript" id="proof122">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">TR1</span> <span class="id">TR2</span> <span class="id">R</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#Hoare_ifthenelse">Hoare_ifthenelse</a></span>; <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hoare_consequence">Hoare_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">P</span>' <span class="id">c</span> <span class="id">Q</span>' <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span>' <span class="id">c</span> <span class="id">Q</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">P</span> --&gt;&gt; <span class="id">P</span>' -&gt; (<span class="kwd">forall</span> <span class="id">v</span>, <span class="id">Q</span>' <span class="id">v</span> --&gt;&gt; <span class="id">Q</span> <span class="id">v</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof123')">Proof.</div>
+<div class="proofscript" id="proof123">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#safe_consequence">safe_consequence</a></span> <span class="kwd">with</span> <span class="id">Q</span>'; <span class="tactic">auto</span>. <br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_consequence">triple_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">P</span>' <span class="id">c</span> <span class="id">Q</span>' <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span>' ]] <span class="id">c</span> [[ <span class="id">Q</span>' ]] -&gt;<br/>
+&nbsp;&nbsp;<span class="id">P</span> --&gt;&gt; <span class="id">P</span>' -&gt; (<span class="kwd">forall</span> <span class="id">v</span>, <span class="id">Q</span>' <span class="id">v</span> --&gt;&gt; <span class="id">Q</span> <span class="id">v</span>) -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof124')">Proof.</div>
+<div class="proofscript" id="proof124">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#Hoare_consequence">Hoare_consequence</a></span> <span class="kwd">with</span> (<span class="id">P</span>' ** <span class="id">R</span>) (<span class="kwd">fun</span> <span class="id">v</span> =&gt; <span class="id">Q</span>' <span class="id">v</span> ** <span class="id">R</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#sepconj_imp_l">sepconj_imp_l</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#sepconj_imp_l">sepconj_imp_l</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hoare_pick">Hoare_pick</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#Hoare">Hoare</a></span> <span class="id">P</span> (<span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> <span class="id">n</span>) (<span class="kwd">fun</span> <span class="id">i</span> =&gt; (0 &lt;= <span class="id">i</span> &lt; <span class="id">n</span>) //\\ <span class="id">P</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof125')">Proof.</div>
+<div class="proofscript" id="proof125">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">n</span> <span class="id">h</span> <span class="id">Ph</span>. <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+- <span class="id">constructor</span>.<br/>
+- <span class="tactic">intros</span> <span class="id">c</span>' <span class="id">h</span>' <span class="id">RED</span>; <span class="id">inv</span> <span class="id">RED</span>. <span class="id">constructor</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_pick">triple_pick</a></span>: <span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Separation.html#emp">emp</a></span> ]]<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> <span class="id">n</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">i</span> =&gt; <span class="id"><a href="CDF.Separation.html#pure">pure</a></span> (0 &lt;= <span class="id">i</span> &lt; <span class="id">n</span>) ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof126')">Proof.</div>
+<div class="proofscript" id="proof126">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">R</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#Hoare_consequence">Hoare_consequence</a></span> <span class="kwd">with</span> (<span class="id">P</span>' := <span class="id">R</span>). <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#Hoare_pick">Hoare_pick</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#pureconj_sepconj">pureconj_sepconj</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h2> 2.5.  Useful derived rules </h2>
+<br/>
+<div class="doc">The following rules are heavily used in the examples of section 3. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_consequence_pre">triple_consequence_pre</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">P</span>' <span class="id">c</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span>' ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;<span class="id">P</span> --&gt;&gt; <span class="id">P</span>' -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof127')">Proof.</div>
+<div class="proofscript" id="proof127">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence">triple_consequence</a></span> <span class="kwd">with</span> <span class="id">P</span>' <span class="id">Q</span>; <span class="tactic">auto</span>. <span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_consequence_post">triple_consequence_post</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> <span class="id">Q</span>',<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span>' ]] -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span>, <span class="id">Q</span>' <span class="id">v</span> --&gt;&gt; <span class="id">Q</span> <span class="id">v</span>) -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof128')">Proof.</div>
+<div class="proofscript" id="proof128">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence">triple_consequence</a></span> <span class="kwd">with</span> <span class="id">P</span> <span class="id">Q</span>'; <span class="tactic">auto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_lift_pure">triple_lift_pure</a></span>: <span class="kwd">forall</span> (<span class="id">P</span>: <span class="kwd">Prop</span>) <span class="id">P</span>' <span class="id">c</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;(<span class="id">P</span> -&gt; [[ <span class="id">P</span>' ]] <span class="id">c</span> [[ <span class="id">Q</span> ]]) -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id">P</span> //\\ <span class="id">P</span>' ]] <span class="id">c</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof129')">Proof.</div>
+<div class="proofscript" id="proof129">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">R</span> <span class="id">h</span> <span class="id">Ph</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span> <span class="kwd">in</span> <span class="id">Ph</span>. <span class="tactic">destruct</span> <span class="id">Ph</span> <span class="kwd">as</span> [<span class="id">P1</span> <span class="id">P2</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="triple_lift_exists">triple_lift_exists</a></span>: <span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) (<span class="id">P</span>: <span class="id">X</span> -&gt; <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>) <span class="id">c</span> <span class="id">Q</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, [[ <span class="id">P</span> <span class="id">x</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]]) -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Separation.html#aexists">aexists</a></span> <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof130')">Proof.</div>
+<div class="proofscript" id="proof130">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">R</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; (<span class="id">x</span> &amp; <span class="id">Px1</span>) &amp; <span class="id">R2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">H</span> <span class="id">x</span> <span class="id">R</span>). <span class="id">exists</span> <span class="id">h1</span>, <span class="id">h2</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="unroll_com">unroll_com</a></span>: <span class="kwd">forall</span> <span class="id">c</span>,<br/>
+&nbsp;&nbsp;<span class="id">c</span> = <span class="kwd">match</span> <span class="id">c</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">x</span> =&gt; <span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span> =&gt; <span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> <span class="id">c</span> <span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> =&gt; <span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#ALLOC">ALLOC</a></span> <span class="id">sz</span> =&gt; <span class="id"><a href="CDF.Seplog.html#ALLOC">ALLOC</a></span> <span class="id">sz</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> <span class="id">l</span> =&gt; <span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> <span class="id">l</span> <span class="id">v</span> =&gt; <span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> <span class="id">l</span> <span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#FREE">FREE</a></span> <span class="id">l</span> =&gt; <span class="id"><a href="CDF.Seplog.html#FREE">FREE</a></span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Seplog.html#PICK">PICK</a></span> <span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof131')">Proof.</div>
+<div class="proofscript" id="proof131">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h1> 3. Singly-linked lists </h1>
+<br/>
+<h2> Representation predicate </h2>
+<br/>
+<div class="doc">Here is a separation logic assertion that describes the in-memory
+    representation of a list.
+<ul>
+<li>
+   <span class="bracket"><span class="id">a</span></span> is the pointer to the list head (or 0 if the list is empty).
+</li>
+<li>
+   <span class="bracket"><span class="id">l</span></span> is the Coq list of the list elements.
+</li>
+</ul>
+</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="list_at">list_at</a></span> (<span class="id">a</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">l</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; (<span class="id">a</span> = 0) //\\ <span class="id"><a href="CDF.Separation.html#emp">emp</a></span><br/>
+&nbsp;&nbsp;| <span class="id">h</span> :: <span class="id">t</span> =&gt; <span class="id"><a href="CDF.Separation.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">a</span>' =&gt; (<span class="id">a</span> &lt;&gt; 0) //\\ <span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">a</span> <span class="id">h</span> ** <span class="id"><a href="CDF.Separation.html#contains">contains</a></span> (<span class="id">a</span> + 1) <span class="id">a</span>' ** <span class="id">list_at</span> <span class="id">a</span>' <span class="id">t</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<h2> Computing the length of a list </h2>
+<br/>
+<div class="doc">Taking advantage of the coinductive nature of type <span class="bracket"><span class="id">com</span></span>,
+    we use infinite commands to represent loops and tail-recursive functions. </div>
+<br/>
+<span class="kwd">CoFixpoint</span> <span class="id"><a name="list_length_rec">list_length_rec</a></span> (<span class="id">a</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) (<span class="id">len</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="CDF.Seplog.html#com">com</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">a</span> (<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> (<span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> (<span class="id">a</span> + 1)) (<span class="kwd">fun</span> <span class="id">t</span> =&gt; <span class="id">list_length_rec</span> <span class="id">t</span> (<span class="id">len</span> + 1))) (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">len</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="list_length">list_length</a></span> (<span class="id">a</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) : <span class="id"><a href="CDF.Seplog.html#com">com</a></span> := <span class="id"><a href="CDF.Seplog.html#list_length_rec">list_length_rec</a></span> <span class="id">a</span> 0.<br/>
+<br/>
+<div class="doc">Normally we would write
+<pre>
+   len = 0;
+   while (a != 0) { a = get (a + 1); len = len + 1; }</pre>
+   With the coinductive definition, we write the equivalent infinite command
+<pre>
+   if (a == 0) return 0; else {
+     a1 = get (a + 1);
+     if (a1 == 0) return 1; else {
+       a2 = get (a1 + 1);
+       if (a2 == 0) return 2; else ...</pre>
+</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_length_rec_correct">list_length_rec_correct</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">a</span> <span class="id">len</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> <span class="id">l</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#list_length_rec">list_length_rec</a></span> <span class="id">a</span> <span class="id">len</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">len</span>' =&gt; (<span class="id">len</span>' = <span class="id">len</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">List.length</a></span> <span class="id">l</span>)) //\\ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> <span class="id">l</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof132')">Proof.</div>
+<div class="proofscript" id="proof132">
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span> <span class="kwd">as</span> [ | <span class="id">h</span> <span class="id">t</span>]; <span class="tactic">intros</span>; <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Seplog.html#unroll_com">unroll_com</a></span> (<span class="id"><a href="CDF.Seplog.html#list_length_rec">list_length_rec</a></span> <span class="id">a</span> <span class="id">len</span>)); <span class="id">cbn</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intro</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_ifthenelse">triple_ifthenelse</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H2</span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_pure">triple_pure</a></span>. <span class="tactic">intros</span> <span class="id">h</span> <span class="id">H2</span>. <span class="tactic">split</span>. <span class="id">lia</span>. <span class="tactic">auto</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_exists">triple_lift_exists</a></span>. <span class="tactic">intros</span> <span class="id">a</span>'. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H1</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_ifthenelse">triple_ifthenelse</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_let">triple_let</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_get">triple_get</a></span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">a</span>''. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H3</span>. <span class="tactic">subst</span> <span class="id">a</span>''.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_post">triple_consequence_post</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>. <span class="tactic">apply</span> <span class="id">IHt</span>. <span class="tactic">intros</span> <span class="id">len</span>'; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h1</span> (<span class="id">A</span> &amp; <span class="id">B</span>). <span class="tactic">split</span>. <span class="id">lia</span>. <span class="id">exists</span> <span class="id">a</span>'. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H2</span>. <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id"><a name="list_length_correct">list_length_correct</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">a</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> <span class="id">l</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#list_length">list_length</a></span> <span class="id">a</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">len</span> =&gt; (<span class="id">len</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> <span class="id">l</span>)) //\\ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> <span class="id">l</span> ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof133')">Proof.</div>
+<div class="proofscript" id="proof133">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#list_length_rec_correct">list_length_rec_correct</a></span>.<br/>
+Qed.</div>
+<br/>
+<h2> Concatenating two lists in-place </h2>
+<br/>
+<div class="doc">In loop notation:
+<pre>
+  if (l1 == 0) return l2; else {
+    t = get(l1 + 1);
+    while (get (t + 1) != 0) t = get (t + 1);
+    set (t + 1, l2);
+    return l1;
+  }</pre>
+</div>
+<br/>
+<span class="kwd">CoFixpoint</span> <span class="id"><a name="list_concat_rec">list_concat_rec</a></span> (<span class="id">a1</span> <span class="id">a2</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) : <span class="id"><a href="CDF.Seplog.html#com">com</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> (<span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> (<span class="id">a1</span> + 1)) (<span class="kwd">fun</span> <span class="id">t</span> =&gt; <span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">t</span> (<span class="id">list_concat_rec</span> <span class="id">t</span> <span class="id">a2</span>) (<span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> (<span class="id">a1</span> + 1) <span class="id">a2</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="list_concat">list_concat</a></span> (<span class="id">a1</span> <span class="id">a2</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) : <span class="id"><a href="CDF.Seplog.html#com">com</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">a1</span> (<span class="id"><a href="CDF.Seplog.html#SEQ">SEQ</a></span> (<span class="id"><a href="CDF.Seplog.html#list_concat_rec">list_concat_rec</a></span> <span class="id">a1</span> <span class="id">a2</span>) (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">a1</span>)) (<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">a2</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_concat_rec_correct">list_concat_rec_correct</a></span>: <span class="kwd">forall</span> <span class="id">l2</span> <span class="id">a2</span> <span class="id">l1</span> <span class="id">a1</span>,<br/>
+&nbsp;&nbsp;<span class="id">a1</span> &lt;&gt; 0 -&gt;<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a1</span> <span class="id">l1</span> ** <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a2</span> <span class="id">l2</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#list_concat_rec">list_concat_rec</a></span> <span class="id">a1</span> <span class="id">a2</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a1</span> (<span class="id">l1</span> ++ <span class="id">l2</span>) ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof134')">Proof.</div>
+<div class="proofscript" id="proof134">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l1</span> <span class="kwd">as</span> [ | <span class="id">h1</span> <span class="id">t1</span>]; <span class="tactic">intros</span>; <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Seplog.html#unroll_com">unroll_com</a></span> (<span class="id"><a href="CDF.Seplog.html#list_concat_rec">list_concat_rec</a></span> <span class="id">a1</span> <span class="id">a2</span>)); <span class="tactic">simpl</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span>. <span class="id">lia</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_aexists">lift_aexists</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_exists">triple_lift_exists</a></span>. <span class="tactic">intros</span> <span class="id">a</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_let">triple_let</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>, ! <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_get">triple_get</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">intros</span> <span class="id">t</span>. <span class="tactic">simpl</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H2</span>; <span class="tactic">subst</span> <span class="id">t</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_ifthenelse">triple_ifthenelse</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H2</span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>, ! <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_post">triple_consequence_post</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>. <span class="tactic">apply</span> <span class="id">IHt1</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span> <span class="id">_</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h</span> <span class="id">P</span>. <span class="id">exists</span> <span class="id">a</span>'; <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_post">triple_consequence_post</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_pre">triple_consequence_pre</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_set">triple_set</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h</span> <span class="id">P</span>; <span class="id">exists</span> <span class="id">a</span>'; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span> <span class="id">_</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> (<span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span>' <span class="id">t1</span>)). <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">t1</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> (<span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">a1</span> <span class="id">h1</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> (<span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">a1</span> <span class="id">h1</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h</span> (<span class="id">A</span> &amp; <span class="id">B</span>). <span class="id">exists</span> <span class="id">a2</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="tactic">rewrite</span> ! <span class="id"><a href="CDF.Separation.html#lift_aexists">lift_aexists</a></span>. <span class="tactic">intros</span> <span class="id">h</span> (<span class="id">x</span> &amp; <span class="id">A</span>). <span class="tactic">rewrite</span> ! <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span> <span class="kwd">in</span> <span class="id">A</span>. <span class="tactic">destruct</span> <span class="id">A</span>. <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_concat_correct">list_concat_correct</a></span>: <span class="kwd">forall</span> <span class="id">l1</span> <span class="id">a1</span> <span class="id">l2</span> <span class="id">a2</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a1</span> <span class="id">l1</span> ** <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a2</span> <span class="id">l2</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#list_concat">list_concat</a></span> <span class="id">a1</span> <span class="id">a2</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">a</span> =&gt; <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> (<span class="id">l1</span> ++ <span class="id">l2</span>) ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof135')">Proof.</div>
+<div class="proofscript" id="proof135">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Seplog.html#list_concat">list_concat</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_ifthenelse">triple_ifthenelse</a></span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H1</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_let">triple_let</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#list_concat_rec_correct">list_concat_rec_correct</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span> <span class="id">_</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_pure">triple_pure</a></span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l1</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_pure">triple_pure</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>. <span class="tactic">intros</span> <span class="id">h</span> (<span class="id">A</span> &amp; <span class="id">B</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_aexists">lift_aexists</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_exists">triple_lift_exists</a></span>. <span class="tactic">intros</span> <span class="id">a</span>'. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span>; <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<h2> List reversal in place </h2>
+<br/>
+<div class="doc">In loop notation:
+<pre>
+  p = 0;
+  while (l != 0) {
+    n = get (l + 1);
+    set (l + 1, p);
+    p = l;
+    l = n;
+  }
+  return p;</pre>
+</div>
+<br/>
+<span class="kwd">CoFixpoint</span> <span class="id"><a name="list_rev_rec">list_rev_rec</a></span> (<span class="id">a</span> <span class="id">p</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) : <span class="id"><a href="CDF.Seplog.html#com">com</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="CDF.Seplog.html#LET">LET</a></span> (<span class="id"><a href="CDF.Seplog.html#GET">GET</a></span> (<span class="id">a</span> + 1)) (<span class="kwd">fun</span> <span class="id">n</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#SEQ">SEQ</a></span> (<span class="id"><a href="CDF.Seplog.html#SET">SET</a></span> (<span class="id">a</span> + 1) <span class="id">p</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">list_rev_rec</span> <span class="id">n</span> <span class="id">a</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="CDF.Seplog.html#PURE">PURE</a></span> <span class="id">p</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="list_rev">list_rev</a></span> (<span class="id">a</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) : <span class="id"><a href="CDF.Seplog.html#com">com</a></span> := <span class="id"><a href="CDF.Seplog.html#list_rev_rec">list_rev_rec</a></span> <span class="id">a</span> 0.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_rev_rec_correct">list_rev_rec_correct</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">a</span> <span class="id">l</span>' <span class="id">p</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> <span class="id">l</span> ** <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">p</span> <span class="id">l</span>' ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#list_rev_rec">list_rev_rec</a></span> <span class="id">a</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">x</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev_append">List.rev_append</a></span> <span class="id">l</span> <span class="id">l</span>') ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof136')">Proof.</div>
+<div class="proofscript" id="proof136">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span> <span class="kwd">as</span> [ | <span class="id">hd</span> <span class="id">l</span>]; <span class="tactic">intros</span>; <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Seplog.html#unroll_com">unroll_com</a></span> (<span class="id"><a href="CDF.Seplog.html#list_rev_rec">list_rev_rec</a></span> <span class="id">a</span> <span class="id">p</span>)); <span class="tactic">simpl</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_ifthenelse">triple_ifthenelse</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H2</span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H2</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_pure">triple_pure</a></span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_aexists">lift_aexists</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_exists">triple_lift_exists</a></span>. <span class="tactic">intros</span> <span class="id">a</span>'.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>, ! <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_ifthenelse">triple_ifthenelse</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_let">triple_let</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>, (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> (<span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">a</span> <span class="id">hd</span>)), <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_get">triple_get</a></span>. <span class="tactic">intros</span> <span class="id">a</span>''. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>. <span class="tactic">intros</span> <span class="id">H3</span>. <span class="tactic">subst</span> <span class="id">a</span>''.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_let">triple_let</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_frame">triple_frame</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_pre">triple_consequence_pre</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_set">triple_set</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h</span> <span class="id">P</span>; <span class="id">exists</span> <span class="id">a</span>'; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span> <span class="id">_</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> (<span class="id"><a href="CDF.Separation.html#contains">contains</a></span> (<span class="id">a</span> + 1) <span class="id">p</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> (<span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span>' <span class="id">l</span>)). <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_pre">triple_consequence_pre</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#sepconj_imp_r">sepconj_imp_r</a></span>. <span class="tactic">intros</span> <span class="id">h</span> <span class="id">A</span>. <span class="id">exists</span> <span class="id">p</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#triple_lift_pure">triple_lift_pure</a></span>; <span class="tactic">intros</span> <span class="id">H2</span>. <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_rev_correct">list_rev_correct</a></span>: <span class="kwd">forall</span> <span class="id">a</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">a</span> <span class="id">l</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Seplog.html#list_rev">list_rev</a></span> <span class="id">a</span><br/>
+&nbsp;&nbsp;[[ <span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="CDF.Seplog.html#list_at">list_at</a></span> <span class="id">x</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">List.rev</a></span> <span class="id">l</span>) ]].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof137')">Proof.</div>
+<div class="proofscript" id="proof137">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev_alt">List.rev_alt</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="CDF.Seplog.html#triple_consequence_pre">triple_consequence_pre</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Seplog.html#list_rev_rec_correct">list_rev_rec_correct</a></span>. <br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>, <span class="id"><a href="CDF.Separation.html#lift_simple_conj">lift_simple_conj</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_emp">sepconj_emp</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h</span> <span class="id">A</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>
