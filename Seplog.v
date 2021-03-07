@@ -110,7 +110,7 @@ Definition postcond := Z -> assertion.
 
 (** Instead of axiomatizing the rules of separation logic, then prove
     their soundness against the operational semantics, we define
-    strong triples [ [[ P ]] c [[ Q ]] ] directly in terms of the
+    strong triples [ 〚 P 〛 c 〚 Q 〛 ] directly in terms of the
     operational semantics, then show the rules of separation logic as
     lemmas about these semantic triples. *)
 
@@ -139,7 +139,7 @@ Inductive safe: com -> heap -> postcond -> Prop :=
     larger heap [hunion h hf] obtained by framing.
     (This happens if the location [l] is fresh in [h] but not in [hf].). *)
 
-(** Instead, we define our separation triples [ [[ P ]] c [[ Q ]] ]
+(** Instead, we define our separation triples [ 〚 P 〛 c 〚 Q 〛 ]
     as Hoare triples plus framing: *)
 
 Definition Hoare (P: precond) (c: com) (Q: postcond) : Prop :=
@@ -148,13 +148,13 @@ Definition Hoare (P: precond) (c: com) (Q: postcond) : Prop :=
 Definition triple (P: precond) (c: com) (Q: postcond) :=
   forall (R: assertion), Hoare (P ** R) c (fun v => Q v ** R).
 
-Notation "[[ P ]] c [[ Q ]]" := (triple P c Q) (at level 90, c at next level).
+Notation "〚 P 〛 c 〚 Q 〛" := (triple P c Q) (at level 90, c at next level).
 
 (** This definition validates the frame rule. *)
 
 Lemma triple_frame: forall P c Q R,
-  [[ P ]] c [[ Q ]] ->
-  [[ P ** R ]] c [[ fun v => Q v ** R ]].
+  〚 P 〛 c 〚 Q 〛 ->
+  〚 P ** R 〛 c 〚 fun v => Q v ** R 〛.
 Proof.
   intros P c Q R TR R'. rewrite sepconj_assoc.
   replace (fun v => (Q v ** R) ** R') with (fun v => Q v ** (R ** R')).
@@ -167,7 +167,7 @@ Ltac inv H := inversion H; clear H; subst.
 (** ** 2.2. The "small rules" for heap operations *)
 
 Lemma triple_get: forall l v,
-  [[ contains l v ]] GET l [[ fun v' => (v' = v) //\\ contains l v ]].
+  〚 contains l v 〛 GET l 〚 fun v' => (v' = v) //\\ contains l v 〛.
 Proof.
   intros l v R h (h1 & h2 & H1 & H2 & D & U).
   assert (L1: h1 l = Some v).
@@ -181,7 +181,7 @@ Proof.
 Qed.
 
 Lemma triple_set: forall l v,
-  [[ valid l ]] SET l v [[ fun _ => contains l v ]].
+  〚 valid l 〛 SET l v 〚 fun _ => contains l v 〛.
 Proof.
   intros l v R h (h1 & h2 & H1 & H2 & D & U).
   destruct H1 as (v0 & H1). red in H1.
@@ -219,9 +219,9 @@ Proof.
 Qed. 
 
 Lemma triple_alloc: forall sz,
-  [[ emp ]]
+  〚 emp 〛
   ALLOC sz
-  [[ fun l => (l <> 0) //\\ valid_N l sz ]].
+  〚 fun l => (l <> 0) //\\ valid_N l sz 〛.
 Proof.
   intros sz R h H. rewrite sepconj_emp in H.
   constructor; auto.
@@ -233,9 +233,9 @@ Proof.
 Qed. 
 
 Lemma triple_free: forall l,
-  [[ valid l ]]
+  〚 valid l 〛
   FREE l
-  [[ fun _ => emp ]].
+  〚 fun _ => emp 〛.
 Proof.
   intros l R h (h1 & h2 & H1 & H2 & D & U).
   destruct H1 as (v0 & H1).
@@ -315,7 +315,7 @@ Qed.
 
 Lemma triple_pure: forall P v (Q: postcond),
   P -->> Q v ->
-  [[ P ]] PURE v [[ Q ]].
+  〚 P 〛 PURE v 〚 Q 〛.
 Proof.
   intros; intros R. apply Hoare_pure. apply sepconj_imp_l; auto.
 Qed.
@@ -332,9 +332,9 @@ Qed.
 
 Lemma triple_let:
   forall c f (P: precond) (Q R: postcond),
-  [[ P ]] c [[ Q ]] ->
-  (forall v, [[ Q v ]] f v [[ R ]]) ->
-  [[ P ]] LET c f [[ R ]].
+  〚 P 〛 c 〚 Q 〛 ->
+  (forall v, 〚 Q v 〛 f v 〚 R 〛) ->
+  〚 P 〛 LET c f 〚 R 〛.
 Proof.
   intros c f P Q R TR1 TR2 R'.
   apply Hoare_let with (fun v => Q v ** R').
@@ -355,9 +355,9 @@ Proof.
 Qed.
 
 Lemma triple_ifthenelse: forall b c1 c2 P Q,
-  [[ (b <> 0) //\\ P ]] c1 [[ Q ]] ->
-  [[ (b = 0) //\\ P ]] c2 [[ Q ]] ->
-  [[ P ]] IFTHENELSE b c1 c2 [[ Q ]].
+  〚 (b <> 0) //\\ P 〛 c1 〚 Q 〛 ->
+  〚 (b = 0) //\\ P 〛 c2 〚 Q 〛 ->
+  〚 P 〛 IFTHENELSE b c1 c2 〚 Q 〛.
 Proof.
   intros b c1 c2 P Q TR1 TR2 R.
   apply Hoare_ifthenelse; rewrite <- lift_simple_conj; auto.
@@ -372,9 +372,9 @@ Proof.
 Qed.
 
 Lemma triple_consequence: forall P P' c Q' Q,
-  [[ P' ]] c [[ Q' ]] ->
+  〚 P' 〛 c 〚 Q' 〛 ->
   P -->> P' -> (forall v, Q' v -->> Q v) ->
-  [[ P ]] c [[ Q ]].
+  〚 P 〛 c 〚 Q 〛.
 Proof.
   intros; red; intros. apply Hoare_consequence with (P' ** R) (fun v => Q' v ** R).
   apply H.
@@ -391,9 +391,9 @@ Proof.
 Qed. 
 
 Lemma triple_pick: forall n,
-  [[ emp ]]
+  〚 emp 〛
   PICK n
-  [[ fun i => pure (0 <= i < n) ]].
+  〚 fun i => pure (0 <= i < n) 〛.
 Proof.
   intros; intros R. rewrite sepconj_emp. eapply Hoare_consequence with (P' := R). apply Hoare_pick.
   red; auto.
@@ -405,40 +405,40 @@ Qed.
 (** The following rules are heavily used in the examples of section 3. *)
 
 Lemma triple_consequence_pre: forall P P' c Q,
-  [[ P' ]] c [[ Q ]] ->
+  〚 P' 〛 c 〚 Q 〛 ->
   P -->> P' ->
-  [[ P ]] c [[ Q ]].
+  〚 P 〛 c 〚 Q 〛.
 Proof.
   intros. apply triple_consequence with P' Q; auto. intros; red; auto.
 Qed.
 
 Lemma triple_consequence_post: forall P c Q Q',
-  [[ P ]] c [[ Q' ]] ->
+  〚 P 〛 c 〚 Q' 〛 ->
   (forall v, Q' v -->> Q v) ->
-  [[ P ]] c [[ Q ]].
+  〚 P 〛 c 〚 Q 〛.
 Proof.
   intros. apply triple_consequence with P Q'; auto. red; auto.
 Qed.
 
 Lemma triple_lift_pure: forall (P: Prop) P' c Q,
-  (P -> [[ P' ]] c [[ Q ]]) ->
-  [[ P //\\ P' ]] c [[ Q ]].
+  (P -> 〚 P' 〛 c 〚 Q 〛) ->
+  〚 P //\\ P' 〛 c 〚 Q 〛.
 Proof.
   intros. intros R h Ph. rewrite lift_simple_conj in Ph. destruct Ph as [P1 P2].
   apply H; auto.
 Qed.
 
 Lemma triple_lift_exists: forall (X: Type) (P: X -> assertion) c Q,
-  (forall x, [[ P x ]] c [[ Q ]]) ->
-  [[ aexists P ]] c [[ Q ]].
+  (forall x, 〚 P x 〛 c 〚 Q 〛) ->
+  〚 aexists P 〛 c 〚 Q 〛.
 Proof.
   intros. intros R h (h1 & h2 & (x & Px1) & R2 & D & U).
   apply (H x R). exists h1, h2; intuition auto.
 Qed.
 
 Lemma triple_ifthen: forall b c1 c2 P Q,
-  b <> 0 -> [[ P ]] c1 [[ Q ]] ->
-  [[ P ]] IFTHENELSE b c1 c2 [[ Q ]].
+  b <> 0 -> 〚 P 〛 c1 〚 Q 〛 ->
+  〚 P 〛 IFTHENELSE b c1 c2 〚 Q 〛.
 Proof.
   intros. apply triple_ifthenelse; apply triple_lift_pure; intros.
 - auto.
@@ -446,8 +446,8 @@ Proof.
 Qed.
 
 Lemma triple_ifelse: forall b c1 c2 P Q,
-  b = 0 -> [[ P ]] c2 [[ Q ]] ->
-  [[ P ]] IFTHENELSE b c1 c2 [[ Q ]].
+  b = 0 -> 〚 P 〛 c2 〚 Q 〛 ->
+  〚 P 〛 IFTHENELSE b c1 c2 〚 Q 〛.
 Proof.
   intros. apply triple_ifthenelse; apply triple_lift_pure; intros.
 - lia.
@@ -491,9 +491,9 @@ Definition list_cons (n: Z) (a: addr) : com :=
   LET (ALLOC 2) (fun a' => SEQ (SET a' n) (SEQ (SET (a' + 1) a) (PURE a'))).
 
 Lemma list_cons_correct: forall a n l,
-  [[ list_at a l ]]
-    list_cons n a
-  [[ fun a' => list_at a' (n :: l) ]].
+    〚 list_at a l 〛
+  list_cons n a
+    〚 fun a' => list_at a' (n :: l) 〛.
 Proof.
   intros. eapply triple_let.
   rewrite <- sepconj_emp at 1. apply triple_frame. apply triple_alloc.
@@ -532,9 +532,9 @@ Definition list_length (a: addr) : com := list_length_rec a 0.
 *)
 
 Lemma list_length_rec_correct: forall l a len,
-  [[ list_at a l ]]
-    list_length_rec a len
-  [[ fun len' => (len' = len + Z.of_nat (List.length l)) //\\ list_at a l ]].
+    〚 list_at a l 〛
+  list_length_rec a len
+    〚 fun len' => (len' = len + Z.of_nat (List.length l)) //\\ list_at a l 〛.
 Proof.
 Local Opaque Z.of_nat.
   induction l as [ | h t]; intros; rewrite (unroll_com (list_length_rec a len)); cbn.
@@ -557,9 +557,9 @@ Local Opaque Z.of_nat.
 Qed.
 
 Corollary list_length_correct: forall l a,
-  [[ list_at a l ]]
-    list_length a
-  [[ fun len => (len = Z.of_nat (length l)) //\\ list_at a l ]].
+    〚 list_at a l 〛
+  list_length a
+    〚 fun len => (len = Z.of_nat (length l)) //\\ list_at a l 〛.
 Proof.
   intros. apply list_length_rec_correct.
 Qed.
@@ -585,9 +585,9 @@ Definition list_concat (a1 a2: addr) : com :=
 
 Lemma list_concat_rec_correct: forall l2 a2 l1 a1,
   a1 <> 0 ->
-  [[ list_at a1 l1 ** list_at a2 l2 ]]
-    list_concat_rec a1 a2
-  [[ fun _ => list_at a1 (l1 ++ l2) ]].
+    〚 list_at a1 l1 ** list_at a2 l2 〛
+  list_concat_rec a1 a2
+    〚 fun _ => list_at a1 (l1 ++ l2) 〛.
 Proof.
   induction l1 as [ | h1 t1]; intros; rewrite (unroll_com (list_concat_rec a1 a2)); simpl.
 - rewrite lift_simple_conj. apply triple_lift_pure; intros. lia.
@@ -622,9 +622,9 @@ Proof.
 Qed.
 
 Lemma list_concat_correct: forall l1 a1 l2 a2,
-  [[ list_at a1 l1 ** list_at a2 l2 ]]
-    list_concat a1 a2
-  [[ fun a => list_at a (l1 ++ l2) ]].
+    〚 list_at a1 l1 ** list_at a2 l2 〛
+  list_concat a1 a2
+    〚 fun a => list_at a (l1 ++ l2) 〛.
 Proof.
   intros. unfold list_concat. apply triple_ifthenelse.
 - apply triple_lift_pure; intros H1. 
@@ -661,9 +661,9 @@ CoFixpoint list_rev_rec (a p: addr) : com :=
 Definition list_rev (a: addr) : com := list_rev_rec a 0.
 
 Lemma list_rev_rec_correct: forall l a l' p,
-  [[ list_at a l ** list_at p l' ]]
-    list_rev_rec a p
-  [[ fun x => list_at x (List.rev_append l l') ]].
+    〚 list_at a l ** list_at p l' 〛
+  list_rev_rec a p
+    〚 fun x => list_at x (List.rev_append l l') 〛.
 Proof.
   induction l as [ | hd l]; intros; rewrite (unroll_com (list_rev_rec a p)); simpl.
 - rewrite lift_simple_conj, sepconj_emp. apply triple_lift_pure; intros H1.
@@ -689,9 +689,9 @@ Proof.
 Qed.
 
 Lemma list_rev_correct: forall a l,
-  [[ list_at a l ]]
-    list_rev a
-  [[ fun x => list_at x (List.rev l) ]].
+    〚 list_at a l 〛
+  list_rev a
+    〚 fun x => list_at x (List.rev l) 〛.
 Proof.
   intros. rewrite List.rev_alt.
   eapply triple_consequence_pre. apply list_rev_rec_correct. 

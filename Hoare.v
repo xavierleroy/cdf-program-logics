@@ -234,7 +234,7 @@ Notation "P \\// Q" := (aor P Q) (at level 75, right associativity).
 (** ** 2.2.  The rules of Hoare logic *)
 
 (** Here are the base rules for weak Hoare logic.
-    They define a relation [ {{P}} c {{Q}}], where
+    They define a relation [ ⦃P⦄ c ⦃Q⦄], where
 -   [P] is the precondition, assumed to hold "before" executing [c];
 -   [c] is the program or program fragment we reason about;
 -   [Q] is the postcondition, guaranteed to hold "after" executing [c].
@@ -243,96 +243,96 @@ Notation "P \\// Q" := (aor P Q) (at level 75, right associativity).
   of the command [c].  What is guaranteed is that if [c] terminates,
   then its final store satisfies postcondition [Q]. *)
 
-Reserved Notation "{{ P }} c {{ Q }}" (at level 90, c at next level).
+Reserved Notation "⦃ P ⦄ c ⦃ Q ⦄" (at level 90, c at next level).
 
 Inductive Hoare: assertion -> com -> assertion -> Prop :=
   | Hoare_skip: forall P,
-      {{ P }} SKIP {{ P }}
+      ⦃ P ⦄ SKIP ⦃ P ⦄
   | Hoare_assign: forall P x a,
-      {{ aupdate x a P }} ASSIGN x a {{ P }}
+      ⦃ aupdate x a P ⦄ ASSIGN x a ⦃ P ⦄
   | Hoare_seq: forall P Q R c1 c2,
-      {{ P }} c1 {{ Q }} ->
-      {{ Q }} c2 {{ R }} ->
-      {{ P }} c1;;c2 {{ R }}
+      ⦃ P ⦄ c1 ⦃ Q ⦄ ->
+      ⦃ Q ⦄ c2 ⦃ R ⦄ ->
+      ⦃ P ⦄ c1;;c2 ⦃ R ⦄
   | Hoare_ifthenelse: forall P Q b c1 c2,
-      {{ atrue b //\\ P }} c1 {{ Q }} ->
-      {{ afalse b //\\ P }} c2 {{ Q }} ->
-      {{ P }} IFTHENELSE b c1 c2 {{ Q }}
+      ⦃ atrue b //\\ P ⦄ c1 ⦃ Q ⦄ ->
+      ⦃ afalse b //\\ P ⦄ c2 ⦃ Q ⦄ ->
+      ⦃ P ⦄ IFTHENELSE b c1 c2 ⦃ Q ⦄
   | Hoare_while: forall P b c,
-      {{ atrue b //\\ P }} c {{ P }} ->
-      {{ P }} WHILE b c {{ afalse b //\\ P }}
+      ⦃ atrue b //\\ P ⦄ c ⦃ P ⦄ ->
+      ⦃ P ⦄ WHILE b c ⦃ afalse b //\\ P ⦄
   | Hoare_havoc: forall x Q,
-      {{ aforall (fun n => aupdate x (CONST n) Q) }} HAVOC x {{ Q }}
+      ⦃ aforall (fun n => aupdate x (CONST n) Q) ⦄ HAVOC x ⦃ Q ⦄
   | Hoare_assert: forall P b,
-      {{ atrue b //\\ P }} ASSERT b {{ atrue b //\\ P }}
+      ⦃ atrue b //\\ P ⦄ ASSERT b ⦃ atrue b //\\ P ⦄
   | Hoare_consequence: forall P Q P' Q' c,
-      {{ P }} c {{ Q }} ->
+      ⦃ P ⦄ c ⦃ Q ⦄ ->
       P' -->> P ->
       Q -->> Q' ->
-      {{ P' }} c {{ Q' }}
+      ⦃ P' ⦄ c ⦃ Q' ⦄
 
-where "{{ P }} c {{ Q }}" := (Hoare P c Q).
+where "⦃ P ⦄ c ⦃ Q ⦄" := (Hoare P c Q).
 
 (** Here are the rules for strong Hoare logic, defining strong triples
-    [ [[P]] c [[Q]] ] that guarantee that [c] terminates.
+    [ 〚P〛 c 〚Q〛 ] that guarantee that [c] terminates.
     The only difference with weak triples is the rule for [while] loops. *)
 
-Reserved Notation "[[ P ]] c [[ Q ]]" (at level 90, c at next level).
+Reserved Notation "〚 P 〛 c 〚 Q 〛" (at level 90, c at next level).
 
 Definition alessthan (a: aexp) (v: Z) : assertion :=
   fun s => 0 <= aeval a s < v.
 
 Inductive HOARE: assertion -> com -> assertion -> Prop :=
   | HOARE_skip: forall P,
-      [[ P ]] SKIP [[ P ]]
+      〚 P 〛 SKIP 〚 P 〛
   | HOARE_assign: forall P x a,
-      [[ aupdate x a P ]] ASSIGN x a [[ P ]]
+      〚 aupdate x a P 〛 ASSIGN x a 〚 P 〛
   | HOARE_seq: forall P Q R c1 c2,
-      [[ P ]] c1 [[ Q ]] ->
-      [[ Q ]] c2 [[ R ]] ->
-      [[ P ]] c1;;c2 [[ R ]]
+      〚 P 〛 c1 〚 Q 〛 ->
+      〚 Q 〛 c2 〚 R 〛 ->
+      〚 P 〛 c1;;c2 〚 R 〛
   | HOARE_ifthenelse: forall P Q b c1 c2,
-      [[ atrue b //\\ P ]] c1 [[ Q ]] ->
-      [[ afalse b //\\ P ]] c2 [[ Q ]] ->
-      [[ P ]] IFTHENELSE b c1 c2 [[ Q ]]
+      〚 atrue b //\\ P 〛 c1 〚 Q 〛 ->
+      〚 afalse b //\\ P 〛 c2 〚 Q 〛 ->
+      〚 P 〛 IFTHENELSE b c1 c2 〚 Q 〛
   | HOARE_while: forall P b c a,
       (forall v, 
-         [[ atrue b //\\ aequal a v //\\ P ]] c [[ alessthan a v //\\ P ]]) ->
-      [[ P ]] WHILE b c [[ afalse b //\\ P ]]
+         〚 atrue b //\\ aequal a v //\\ P 〛 c 〚 alessthan a v //\\ P 〛) ->
+      〚 P 〛 WHILE b c 〚 afalse b //\\ P 〛
   | HOARE_havoc: forall x Q,
-      [[ aforall (fun n => aupdate x (CONST n) Q) ]] HAVOC x [[ Q ]]
+      〚 aforall (fun n => aupdate x (CONST n) Q) 〛 HAVOC x 〚 Q 〛
   | HOARE_assert: forall P b,
-      [[ atrue b //\\ P ]] ASSERT b [[ atrue b //\\ P ]]
+      〚 atrue b //\\ P 〛 ASSERT b 〚 atrue b //\\ P 〛
   | HOARE_consequence: forall P Q P' Q' c,
-      [[ P ]] c [[ Q ]] ->
+      〚 P 〛 c 〚 Q 〛 ->
       P' -->> P ->
       Q -->> Q' ->
-      [[ P' ]] c [[ Q' ]]
+      〚 P' 〛 c 〚 Q' 〛
 
-where "[[ P ]] c [[ Q ]]" := (HOARE P c Q).
+where "〚 P 〛 c 〚 Q 〛" := (HOARE P c Q).
 
 (** ** 2.3. Derived and admissible rules *)
 
 Lemma Hoare_consequence_pre: forall P P' Q c,
-      {{ P }} c {{ Q }} ->
+      ⦃ P ⦄ c ⦃ Q ⦄ ->
       P' -->> P ->
-      {{ P' }} c {{ Q }}.
+      ⦃ P' ⦄ c ⦃ Q ⦄.
 Proof.
   intros. apply Hoare_consequence with (P := P) (Q := Q); unfold aimp; auto.
 Qed.
 
 Lemma Hoare_consequence_post: forall P Q Q' c,
-      {{ P }} c {{ Q }} ->
+      ⦃ P ⦄ c ⦃ Q ⦄ ->
       Q -->> Q' ->
-      {{ P }} c {{ Q' }}.
+      ⦃ P ⦄ c ⦃ Q' ⦄.
 Proof.
   intros. apply Hoare_consequence with (P := P) (Q := Q); unfold aimp; auto.
 Qed.
 
 Lemma Floyd_assign: forall P x a,
-  {{ P }} ASSIGN x a {{ aexists (fun x0 => aexists (fun v =>
+  ⦃ P ⦄ ASSIGN x a ⦃ aexists (fun x0 => aexists (fun v =>
                           aequal (VAR x) v //\\
-                          aupdate x (CONST x0) (P //\\ aequal a v))) }}.
+                          aupdate x (CONST x0) (P //\\ aequal a v))) ⦄.
 Proof.
   intros. eapply Hoare_consequence_pre. apply Hoare_assign.
   intros s Ps.
@@ -351,9 +351,9 @@ Qed.
 (** Some derived constructs, with proof rules. *)
 
 Lemma Hoare_ifthen: forall b c P Q,
-    {{ atrue b //\\ P }} c {{ Q }} ->
+    ⦃ atrue b //\\ P ⦄ c ⦃ Q ⦄ ->
     afalse b //\\ P -->> Q ->
-    {{ P }} IFTHENELSE b c SKIP {{ Q }}.
+    ⦃ P ⦄ IFTHENELSE b c SKIP ⦃ Q ⦄.
 Proof.
   intros. apply Hoare_ifthenelse; auto.
   apply Hoare_consequence_pre with Q; auto using Hoare_skip.
@@ -363,8 +363,8 @@ Definition REPEAT (c: com) (b: bexp) : com :=
   c ;; WHILE b c.
 
 Lemma Hoare_repeat: forall P b c,
-  {{ atrue b //\\ P }} c {{ P }} ->
-  {{ atrue b //\\ P }} REPEAT c b {{ afalse b //\\ P }}.
+  ⦃ atrue b //\\ P ⦄ c ⦃ P ⦄ ->
+  ⦃ atrue b //\\ P ⦄ REPEAT c b ⦃ afalse b //\\ P ⦄.
 Proof.
   intros. apply Hoare_seq with P. auto.
   apply Hoare_while. auto.
@@ -397,9 +397,9 @@ Ltac Tauto :=
 
 Lemma HOARE_frame:
   forall R P c Q,
-  [[ P ]] c [[ Q ]] ->
+  〚 P 〛 c 〚 Q 〛 ->
   independent R (assigns c) ->
-  [[ P //\\ R ]] c [[ Q //\\ R ]].
+  〚 P //\\ R 〛 c 〚 Q //\\ R 〛.
 Proof.
   intros R.
   assert (IND_SUB: forall (vars1 vars2: ident -> Prop),
@@ -448,11 +448,11 @@ Definition FOR (i: ident) (l: aexp) (h: ident) (c: com) : com :=
   WHILE (LESSEQUAL (VAR i) (VAR h)) (c ;; ASSIGN i (PLUS (VAR i) (CONST 1))).
 
 Lemma HOARE_for: forall l h i c P,
-  [[ atrue (LESSEQUAL (VAR i) (VAR h)) //\\ P ]]
+  〚 atrue (LESSEQUAL (VAR i) (VAR h)) //\\ P 〛
     c
-  [[ aupdate i (PLUS (VAR i) (CONST 1)) P ]] ->
+  〚 aupdate i (PLUS (VAR i) (CONST 1)) P 〛 ->
   ~assigns c i -> ~assigns c h -> i <> h -> 
-  [[ aupdate i l P ]] FOR i l h c [[ afalse (LESSEQUAL (VAR i) (VAR h)) //\\ P ]].
+  〚 aupdate i l P 〛 FOR i l h c 〚 afalse (LESSEQUAL (VAR i) (VAR h)) //\\ P 〛.
 Proof.
   intros. apply HOARE_seq with P. apply HOARE_assign.
   set (variant := PLUS (MINUS (VAR h) (VAR i)) (CONST 1)).
@@ -477,7 +477,7 @@ Qed.
 (** Some inversion lemmas. *)
 
 Lemma Hoare_skip_inv: forall P Q,
-  {{ P }} SKIP {{ Q }} -> (P -->> Q).
+  ⦃ P ⦄ SKIP ⦃ Q ⦄ -> (P -->> Q).
 Proof.
   intros P Q H; dependent induction H.
 - red; auto.
@@ -485,7 +485,7 @@ Proof.
 Qed.
 
 Lemma Hoare_assign_inv: forall x a P Q,
-  {{ P }} ASSIGN x a {{ Q }} -> (P -->> aupdate x a Q).
+  ⦃ P ⦄ ASSIGN x a ⦃ Q ⦄ -> (P -->> aupdate x a Q).
 Proof.
   intros x a P Q H; dependent induction H.
 - red; auto.
@@ -493,8 +493,8 @@ Proof.
 Qed.
 
 Lemma Hoare_seq_inv: forall c1 c2 P Q,
-  {{ P }} c1 ;; c2  {{ Q  }} ->
-  exists R, {{ P }} c1 {{ R }} /\ {{ R }} c2 {{ Q }}.
+  ⦃ P ⦄ c1 ;; c2  ⦃ Q  ⦄ ->
+  exists R, ⦃ P ⦄ c1 ⦃ R ⦄ /\ ⦃ R ⦄ c2 ⦃ Q ⦄.
 Proof.
   intros c1 c2 P Q H; dependent induction H.
 - exists Q; auto.
@@ -503,8 +503,8 @@ Proof.
 Qed.
 
 Lemma Hoare_ifthenelse_inv: forall b c1 c2 P Q,
-  {{ P }} IFTHENELSE b c1 c2 {{ Q }} ->
-  {{ atrue b //\\ P }} c1 {{ Q }} /\ {{ afalse b //\\ P }} c2 {{ Q }}.
+  ⦃ P ⦄ IFTHENELSE b c1 c2 ⦃ Q ⦄ ->
+  ⦃ atrue b //\\ P ⦄ c1 ⦃ Q ⦄ /\ ⦃ afalse b //\\ P ⦄ c2 ⦃ Q ⦄.
 Proof.
   intros b c1 c2 P Q H; dependent induction H.
 - split; auto.
@@ -515,8 +515,8 @@ Proof.
 Qed.
 
 Lemma Hoare_while_inv: forall b c P Q,
-  {{ P }} WHILE b c {{ Q }} ->
-  exists Inv, {{ atrue b //\\ Inv }} c {{ Inv }}
+  ⦃ P ⦄ WHILE b c ⦃ Q ⦄ ->
+  exists Inv, ⦃ atrue b //\\ Inv ⦄ c ⦃ Inv ⦄
            /\ (P -->> Inv) /\ (afalse b //\\ Inv -->> Q).
 Proof.
   intros b c P Q H; dependent induction H.
@@ -526,7 +526,7 @@ Proof.
 Qed.
 
 Lemma Hoare_havoc_inv: forall x P Q,
-  {{ P }} HAVOC x {{ Q }} -> (P -->> aforall (fun n => aupdate x (CONST n) Q)).
+  ⦃ P ⦄ HAVOC x ⦃ Q ⦄ -> (P -->> aforall (fun n => aupdate x (CONST n) Q)).
 Proof.
   intros x P Q H; dependent induction H.
 - red; auto.
@@ -534,7 +534,7 @@ Proof.
 Qed.
 
 Lemma Hoare_assert_inv: forall b P Q,
-  {{ P }} ASSERT b {{ Q }} ->
+  ⦃ P ⦄ ASSERT b ⦃ Q ⦄ ->
   exists R, (P -->> atrue b //\\ R) /\ (atrue b //\\ R -->> Q).
 Proof.
   intros b P Q H; dependent induction H.
@@ -547,8 +547,8 @@ Qed.
 
 Lemma Hoare_conj:
   forall c P1 P2 Q1 Q2,
-  {{ P1 }} c {{ Q1 }} -> {{ P2 }} c {{ Q2 }} ->
-  {{ P1 //\\ P2 }} c {{ Q1 //\\ Q2 }}.
+  ⦃ P1 ⦄ c ⦃ Q1 ⦄ -> ⦃ P2 ⦄ c ⦃ Q2 ⦄ ->
+  ⦃ P1 //\\ P2 ⦄ c ⦃ Q1 //\\ Q2 ⦄.
 Proof.
   induction c; intros.
 - apply Hoare_skip_inv in H. apply Hoare_skip_inv in H0.
@@ -581,8 +581,8 @@ Qed.
 
 Lemma Hoare_disj:
   forall c P1 P2 Q1 Q2,
-  {{ P1 }} c {{ Q1 }} -> {{ P2 }} c {{ Q2 }} ->
-  {{ P1 \\// P2 }} c {{ Q1 \\// Q2 }}.
+  ⦃ P1 ⦄ c ⦃ Q1 ⦄ -> ⦃ P2 ⦄ c ⦃ Q2 ⦄ ->
+  ⦃ P1 \\// P2 ⦄ c ⦃ Q1 \\// Q2 ⦄.
 Proof.
   induction c; intros.
 - apply Hoare_skip_inv in H. apply Hoare_skip_inv in H0.
@@ -621,8 +621,8 @@ Definition choice_axiom :=
 Lemma Hoare_exists:
   choice_axiom ->
   forall (X: Type) c (P Q: X -> assertion),
-  (forall x, {{ P x }} c {{ Q x }}) ->
-  {{ aexists P }} c {{ aexists Q }}.
+  (forall x, ⦃ P x ⦄ c ⦃ Q x ⦄) ->
+  ⦃ aexists P ⦄ c ⦃ aexists Q ⦄.
 Proof.
   intros CHOICE X. induction c; intros P Q H.
 - assert (H': forall x, P x -->> Q x) by (intros; apply Hoare_skip_inv; auto).
@@ -677,8 +677,8 @@ Qed.
 Lemma Hoare_forall:
   choice_axiom ->
   forall (X: Type) (inhabited: X) c (P Q: X -> assertion),
-  (forall x, {{ P x }} c {{ Q x }}) ->
-  {{ aforall P }} c {{ aforall Q }}.
+  (forall x, ⦃ P x ⦄ c ⦃ Q x ⦄) ->
+  ⦃ aforall P ⦄ c ⦃ aforall Q ⦄.
 Proof.
   intros CHOICE X inhabited; induction c; intros P Q H.
 - assert (H': forall x, P x -->> Q x) by (intros; apply Hoare_skip_inv; auto).
@@ -740,7 +740,7 @@ Module Soundness1.
 
 Lemma Hoare_safe:
   forall P c Q,
-  {{ P }} c {{ Q }} ->
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
   forall s, P s -> ~(error c s).
 Proof.
   induction 1; intros s Ps; simpl; auto. destruct Ps. red in H. congruence.
@@ -748,9 +748,9 @@ Qed.
 
 Lemma Hoare_step:
   forall P c Q,
-  {{ P }} c {{ Q }} ->
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
   forall s c' s',
-  P s -> red (c, s) (c', s') -> exists P', {{ P' }} c' {{ Q }} /\ P' s'.
+  P s -> red (c, s) (c', s') -> exists P', ⦃ P' ⦄ c' ⦃ Q ⦄ /\ P' s'.
 Proof.
   induction 1; intros s c' s' Ps RED.
 - inv RED.
@@ -778,8 +778,8 @@ Qed.
 
 Corollary Hoare_steps:
   forall P Q c s c' s',
-  {{ P }} c {{ Q }} -> P s -> star red (c, s) (c', s') ->
-  exists P', {{ P' }} c' {{ Q }} /\ P' s'.
+  ⦃ P ⦄ c ⦃ Q ⦄ -> P s -> star red (c, s) (c', s') ->
+  exists P', ⦃ P' ⦄ c' ⦃ Q ⦄ /\ P' s'.
 Proof.
   assert (REC: forall cs cs', star red cs cs' ->
                forall P Q, Hoare P (fst cs) Q -> P (snd cs) ->
@@ -795,7 +795,7 @@ Qed.
 
 Corollary Hoare_sound:
   forall P c Q s,
-  {{ P }} c {{ Q }} -> P s ->
+  ⦃ P ⦄ c ⦃ Q ⦄ -> P s ->
   ~ goeswrong c s /\ (forall s', terminates c s s' -> Q s').
 Proof.
   intros P c Q s HO Ps; split.
@@ -825,16 +825,16 @@ Inductive safe (Q: assertion): com -> store -> Prop :=
 Definition Triple (P: assertion) (c: com) (Q: assertion) : Prop :=
   forall s, P s -> safe Q c s.
 
-Notation "[[[ P ]]] c [[[ Q ]]]" := (Triple P c Q) (at level 90, c at next level).
+Notation "〚〚 P 〛〛 c 〚〚 Q 〛〛" := (Triple P c Q) (at level 90, c at next level).
 
 Lemma Triple_skip: forall P,
-      [[[ P ]]] SKIP [[[ P ]]].
+      〚〚 P 〛〛 SKIP 〚〚 P 〛〛.
 Proof.
   intros P s PRE. apply safe_now. reflexivity. auto.
 Qed.
 
 Lemma Triple_assign: forall P x a,
-      [[[ aupdate x a P ]]] ASSIGN x a [[[ P ]]].
+      〚〚 aupdate x a P 〛〛 ASSIGN x a 〚〚 P 〛〛.
 Proof.
   intros P x a s PRE. apply safe_step.
 - unfold terminated; congruence. 
@@ -858,16 +858,16 @@ Proof.
 Qed.
 
 Lemma Triple_seq: forall P Q R c1 c2,
-      [[[ P ]]] c1 [[[ Q ]]] -> [[[ Q ]]] c2 [[[ R ]]] ->
-      [[[ P ]]] c1;;c2 [[[ R ]]].
+      〚〚 P 〛〛 c1 〚〚 Q 〛〛 -> 〚〚 Q 〛〛 c2 〚〚 R 〛〛 ->
+      〚〚 P 〛〛 c1;;c2 〚〚 R 〛〛.
 Proof.
   intros. intros s PRE. apply safe_seq with Q; auto.
 Qed.
 
 Lemma Triple_ifthenelse: forall P Q b c1 c2,
-      [[[ atrue b //\\ P ]]] c1 [[[ Q ]]] ->
-      [[[ afalse b //\\ P ]]] c2 [[[ Q ]]] ->
-      [[[ P ]]] IFTHENELSE b c1 c2 [[[ Q ]]].
+      〚〚 atrue b //\\ P 〛〛 c1 〚〚 Q 〛〛 ->
+      〚〚 afalse b //\\ P 〛〛 c2 〚〚 Q 〛〛 ->
+      〚〚 P 〛〛 IFTHENELSE b c1 c2 〚〚 Q 〛〛.
 Proof.
   intros; intros s PRE. apply safe_step. unfold terminated; congruence. cbn; auto.
   intros c' s' RED; inv RED.
@@ -878,11 +878,11 @@ Qed.
 
 Lemma Triple_while: forall P variant b c,
   (forall v,
-     [[[ atrue b //\\ aequal variant v //\\ P ]]]
+     〚〚 atrue b //\\ aequal variant v //\\ P 〛〛
      c
-     [[[ alessthan variant v //\\ P ]]])
+     〚〚 alessthan variant v //\\ P 〛〛)
   ->
-     [[[ P ]]] WHILE b c [[[ afalse b //\\ P ]]].
+     〚〚 P 〛〛 WHILE b c 〚〚 afalse b //\\ P 〛〛.
 Proof.
   intros P variant b c T.
   assert (REC: forall v s, P s -> aeval variant s = v ->
@@ -899,14 +899,14 @@ Proof.
 Qed.
 
 Lemma Triple_havoc: forall x Q,
-      [[[ aforall (fun n => aupdate x (CONST n) Q) ]]] HAVOC x [[[ Q ]]].
+      〚〚 aforall (fun n => aupdate x (CONST n) Q) 〛〛 HAVOC x 〚〚 Q 〛〛.
 Proof.
   intros; intros s PRE. apply safe_step. unfold terminated; congruence. cbn; auto.
   intros c' s' RED; inv RED. constructor. red; auto. apply PRE.
 Qed.
 
 Lemma Triple_assert: forall b P,
-      [[[ atrue b //\\ P ]]] ASSERT b [[[ atrue b //\\ P ]]].
+      〚〚 atrue b //\\ P 〛〛 ASSERT b 〚〚 atrue b //\\ P 〛〛.
 Proof.
   intros. intros s [PRE1 PRE2]. red in PRE1.
   apply safe_step. unfold terminated; congruence. cbn; congruence.
@@ -914,8 +914,8 @@ Proof.
 Qed.
 
 Lemma Triple_consequence: forall P Q P' Q' c,
-      [[[ P ]]] c [[[ Q ]]] -> P' -->> P -> Q -->> Q' ->
-      [[[ P' ]]] c [[[ Q' ]]].
+      〚〚 P 〛〛 c 〚〚 Q 〛〛 -> P' -->> P -> Q -->> Q' ->
+      〚〚 P' 〛〛 c 〚〚 Q' 〛〛.
 Proof.
   intros.
   assert (REC: forall c s, safe Q c s -> safe Q' c s).
@@ -927,7 +927,7 @@ Proof.
 Qed.
 
 Theorem HOARE_sound:
-  forall P c Q, [[ P ]] c [[ Q ]] -> [[[ P ]]] c [[[ Q ]]].
+  forall P c Q, 〚 P 〛 c 〚 Q 〛 -> 〚〚 P 〛〛 c 〚〚 Q 〛〛.
 Proof.
   induction 1.
 - apply Triple_skip.
@@ -976,16 +976,16 @@ Qed.
 Definition triple (P: assertion) (c: com) (Q: assertion) : Prop :=
   forall s, P s -> safe Q c s.
 
-Notation "{{{ P }}} c {{{ Q }}}" := (triple P c Q) (at level 90, c at next level).
+Notation "⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄" := (triple P c Q) (at level 90, c at next level).
 
 Lemma triple_skip: forall P,
-      {{{ P }}} SKIP {{{ P }}}.
+      ⦃⦃ P ⦄⦄ SKIP ⦃⦃ P ⦄⦄.
 Proof.
   intros P s PRE. apply safe_now. reflexivity. auto.
 Qed.
 
 Lemma triple_assign: forall P x a,
-      {{{ aupdate x a P }}} ASSIGN x a {{{ P }}}.
+      ⦃⦃ aupdate x a P ⦄⦄ ASSIGN x a ⦃⦃ P ⦄⦄.
 Proof.
   intros P x a s PRE. apply safe_step.
 - unfold terminated; congruence. 
@@ -1009,15 +1009,15 @@ Proof.
 Defined.
 
 Lemma triple_seq: forall P Q R c1 c2,
-      {{{ P }}} c1 {{{ Q }}} -> {{{ Q }}} c2 {{{ R }}} ->
-      {{{ P }}} c1;;c2 {{{ R }}}.
+      ⦃⦃ P ⦄⦄ c1 ⦃⦃ Q ⦄⦄ -> ⦃⦃ Q ⦄⦄ c2 ⦃⦃ R ⦄⦄ ->
+      ⦃⦃ P ⦄⦄ c1;;c2 ⦃⦃ R ⦄⦄.
 Proof.
   intros. intros s PRE. apply safe_seq with Q; auto.
 Qed.
 
 Lemma triple_while: forall P b c,
-   {{{ atrue b //\\ P }}} c {{{ P  }}} ->
-   {{{ P }}} WHILE b c {{{ afalse b //\\ P }}}.
+   ⦃⦃ atrue b //\\ P ⦄⦄ c ⦃⦃ P  ⦄⦄ ->
+   ⦃⦃ P ⦄⦄ WHILE b c ⦃⦃ afalse b //\\ P ⦄⦄.
 Proof.
   intros P b c T.
   assert (REC: forall s, P s ->
@@ -1033,9 +1033,9 @@ Proof.
 Qed.
 
 Lemma triple_ifthenelse: forall P Q b c1 c2,
-      {{{ atrue b //\\ P }}} c1 {{{ Q }}} ->
-      {{{ afalse b //\\ P }}} c2 {{{ Q }}} ->
-      {{{ P }}} IFTHENELSE b c1 c2 {{{ Q }}}.
+      ⦃⦃ atrue b //\\ P ⦄⦄ c1 ⦃⦃ Q ⦄⦄ ->
+      ⦃⦃ afalse b //\\ P ⦄⦄ c2 ⦃⦃ Q ⦄⦄ ->
+      ⦃⦃ P ⦄⦄ IFTHENELSE b c1 c2 ⦃⦃ Q ⦄⦄.
 Proof.
   intros; intros s PRE. apply safe_step. unfold terminated; congruence. cbn; auto.
   intros c' s' RED; inv RED.
@@ -1045,14 +1045,14 @@ Proof.
 Qed.
 
 Lemma triple_havoc: forall x Q,
-      {{{ aforall (fun n => aupdate x (CONST n) Q) }}} HAVOC x {{{ Q }}}.
+      ⦃⦃ aforall (fun n => aupdate x (CONST n) Q) ⦄⦄ HAVOC x ⦃⦃ Q ⦄⦄.
 Proof.
   intros; intros s PRE. apply safe_step. unfold terminated; congruence. cbn; auto.
   intros c' s' RED; inv RED. constructor. red; auto. apply PRE.
 Qed.
 
 Lemma triple_assert: forall b P,
-      {{{ atrue b //\\ P }}} ASSERT b {{{ atrue b //\\ P }}}.
+      ⦃⦃ atrue b //\\ P ⦄⦄ ASSERT b ⦃⦃ atrue b //\\ P ⦄⦄.
 Proof.
   intros. intros s [PRE1 PRE2]. red in PRE1.
   apply safe_step. unfold terminated; congruence. cbn; congruence.
@@ -1060,8 +1060,8 @@ Proof.
 Qed.
 
 Lemma triple_consequence: forall P Q P' Q' c,
-      {{{ P }}} c {{{ Q }}} -> P' -->> P -> Q -->> Q' ->
-      {{{ P' }}} c {{{ Q' }}}.
+      ⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄ -> P' -->> P -> Q -->> Q' ->
+      ⦃⦃ P' ⦄⦄ c ⦃⦃ Q' ⦄⦄.
 Proof.
   intros.
   assert (REC: forall c s, safe Q c s -> safe Q' c s).
@@ -1073,7 +1073,7 @@ Proof.
 Qed.
 
 Theorem Hoare_sound:
-  forall P c Q, {{ P }} c {{ Q }} -> {{{ P }}} c {{{ Q }}}.
+  forall P c Q, ⦃ P ⦄ c ⦃ Q ⦄ -> ⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄.
 Proof.
   induction 1.
 - apply triple_skip.
@@ -1106,7 +1106,7 @@ Inductive safe (Q: assertion): nat -> com -> store -> Prop :=
 Definition triple (P: assertion) (c: com) (Q: assertion) : Prop :=
   forall n s, P s -> safe Q n c s.
 
-Notation "{{{ P }}} c {{{ Q }}}" := (triple P c Q) (at level 90, c at next level).
+Notation "⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄" := (triple P c Q) (at level 90, c at next level).
 
 (** Properties of [safe]. *)
 
@@ -1150,13 +1150,13 @@ Qed.
 (** Deduction rules. *)
 
 Lemma triple_skip: forall P,
-      {{{ P }}} SKIP {{{ P }}}.
+      ⦃⦃ P ⦄⦄ SKIP ⦃⦃ P ⦄⦄.
 Proof.
   intros P n s PRE. apply safe_now'. reflexivity. auto.
 Qed.
 
 Lemma triple_assign: forall P x a,
-      {{{ aupdate x a P }}} ASSIGN x a {{{ P }}}.
+      ⦃⦃ aupdate x a P ⦄⦄ ASSIGN x a ⦃⦃ P ⦄⦄.
 Proof.
   intros P x a n s PRE. destruct n. constructor. apply safe_step.
 - unfold terminated; congruence. 
@@ -1181,15 +1181,15 @@ Proof.
 Qed.
 
 Lemma triple_seq: forall P Q R c1 c2,
-      {{{ P }}} c1 {{{ Q }}} -> {{{ Q }}} c2 {{{ R }}} ->
-      {{{ P }}} c1;;c2 {{{ R }}}.
+      ⦃⦃ P ⦄⦄ c1 ⦃⦃ Q ⦄⦄ -> ⦃⦃ Q ⦄⦄ c2 ⦃⦃ R ⦄⦄ ->
+      ⦃⦃ P ⦄⦄ c1;;c2 ⦃⦃ R ⦄⦄.
 Proof.
   intros. intros n s PRE. apply safe_seq with Q; auto.
 Qed.
 
 Lemma triple_while: forall P b c,
-   {{{ atrue b //\\ P }}} c {{{ P  }}} ->
-   {{{ P }}} WHILE b c {{{ afalse b //\\ P }}}.
+   ⦃⦃ atrue b //\\ P ⦄⦄ c ⦃⦃ P  ⦄⦄ ->
+   ⦃⦃ P ⦄⦄ WHILE b c ⦃⦃ afalse b //\\ P ⦄⦄.
 Proof.
   intros P b c T. red. induction n; intros s Ps. constructor.
   apply safe_step. unfold terminated; congruence. cbn; auto.
@@ -1200,9 +1200,9 @@ Proof.
 Qed.
 
 Lemma triple_ifthenelse: forall P Q b c1 c2,
-      {{{ atrue b //\\ P }}} c1 {{{ Q }}} ->
-      {{{ afalse b //\\ P }}} c2 {{{ Q }}} ->
-      {{{ P }}} IFTHENELSE b c1 c2 {{{ Q }}}.
+      ⦃⦃ atrue b //\\ P ⦄⦄ c1 ⦃⦃ Q ⦄⦄ ->
+      ⦃⦃ afalse b //\\ P ⦄⦄ c2 ⦃⦃ Q ⦄⦄ ->
+      ⦃⦃ P ⦄⦄ IFTHENELSE b c1 c2 ⦃⦃ Q ⦄⦄.
 Proof.
   intros; intros n s PRE. destruct n. constructor.
   apply safe_step. unfold terminated; congruence. cbn; auto.
@@ -1213,7 +1213,7 @@ Proof.
 Qed.
 
 Lemma triple_havoc: forall x Q,
-      {{{ aforall (fun n => aupdate x (CONST n) Q) }}} HAVOC x {{{ Q }}}.
+      ⦃⦃ aforall (fun n => aupdate x (CONST n) Q) ⦄⦄ HAVOC x ⦃⦃ Q ⦄⦄.
 Proof.
   intros; intros n s PRE. destruct n. constructor.
   apply safe_step. unfold terminated; congruence. cbn; auto.
@@ -1221,7 +1221,7 @@ Proof.
 Qed.
 
 Lemma triple_assert: forall b P,
-      {{{ atrue b //\\ P }}} ASSERT b {{{ atrue b //\\ P }}}.
+      ⦃⦃ atrue b //\\ P ⦄⦄ ASSERT b ⦃⦃ atrue b //\\ P ⦄⦄.
 Proof.
   intros. intros n s [PRE1 PRE2]. red in PRE1.
   destruct n. constructor.
@@ -1230,8 +1230,8 @@ Proof.
 Qed.
 
 Lemma triple_consequence: forall P Q P' Q' c,
-      {{{ P }}} c {{{ Q }}} -> P' -->> P -> Q -->> Q' ->
-      {{{ P' }}} c {{{ Q' }}}.
+      ⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄ -> P' -->> P -> Q -->> Q' ->
+      ⦃⦃ P' ⦄⦄ c ⦃⦃ Q' ⦄⦄.
 Proof.
   intros.
   assert (REC: forall n c s, safe Q n c s -> safe Q' n c s).
@@ -1244,7 +1244,7 @@ Proof.
 Qed.
 
 Theorem Hoare_sound:
-  forall P c Q, {{ P }} c {{ Q }} -> {{{ P }}} c {{{ Q }}}.
+  forall P c Q, ⦃ P ⦄ c ⦃ Q ⦄ -> ⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄.
 Proof.
   induction 1.
 - apply triple_skip.
@@ -1292,7 +1292,7 @@ Qed.
     of Hoare logic. *)
 
 Lemma Hoare_sem_wp:
-  forall c Q, {{ sem_wp c Q }} c {{ Q }}.
+  forall c Q, ⦃ sem_wp c Q ⦄ c ⦃ Q ⦄.
 Proof.
   induction c; intros Q.
 - eapply Hoare_consequence_pre. apply Hoare_skip.
@@ -1338,7 +1338,7 @@ Qed.
 (** Relative completeness follows. *)
 
 Theorem Hoare_complete:
-  forall P c Q, {{{ P }}} c {{{ Q }}} -> {{ P }} c {{ Q }}.
+  forall P c Q, ⦃⦃ P ⦄⦄ c ⦃⦃ Q ⦄⦄ -> ⦃ P ⦄ c ⦃ Q ⦄.
 Proof.
   intros. apply Hoare_consequence_pre with (sem_wp c Q). 
   apply Hoare_sem_wp.
@@ -1401,7 +1401,7 @@ Definition vcgen (P: assertion) (c: com) (Q: assertion) : Prop :=
   vcond c Q /\ (P -->> wlp c Q).
 
 Lemma wlp_sound: forall c Q,
-  vcond c Q -> {{ wlp c Q }} erase c {{ Q }}.
+  vcond c Q -> ⦃ wlp c Q ⦄ erase c ⦃ Q ⦄.
 Proof.
   induction c; intros Q VC; cbn.
 - apply Hoare_skip.
@@ -1421,7 +1421,7 @@ Proof.
 Qed.
 
 Theorem vcgen_sound: forall P c Q,
-  vcgen P c Q -> {{ P }} erase c {{ Q }}.
+  vcgen P c Q -> ⦃ P ⦄ erase c ⦃ Q ⦄.
 Proof.
   intros P c Q [VC1 VC2]. eapply Hoare_consequence_pre. apply wlp_sound; auto. auto.
 Qed.
@@ -1463,7 +1463,7 @@ Definition vcgen (P: assertion) (c: com) (Q: assertion) : Prop :=
   vcond P c /\ (sp P c -->> Q).
 
 Lemma sp_sound: forall c P,
-  vcond P c -> {{ P }} erase c {{ sp P c }}.
+  vcond P c -> ⦃ P ⦄ erase c ⦃ sp P c ⦄.
 Proof.
   induction c; intros P VC; cbn.
 - apply Hoare_skip.
@@ -1490,7 +1490,7 @@ Proof.
 Qed.
 
 Theorem vcgen_sound: forall P c Q,
-  vcgen P c Q -> {{ P }} erase c {{ Q }}.
+  vcgen P c Q -> ⦃ P ⦄ erase c ⦃ Q ⦄.
 Proof.
   intros P c Q [VC1 VC2]. eapply Hoare_consequence_post. apply sp_sound; auto. auto.
 Qed.

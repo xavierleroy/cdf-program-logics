@@ -250,7 +250,7 @@ Qed.</div>
 <h2> 2.2.  The rules of Hoare logic </h2>
 <br/>
 <div class="doc">Here are the base rules for weak Hoare logic.
-    They define a relation <span class="bracket"> {{<span class="id">P</span>}} <span class="id">c</span> {{<span class="id">Q</span>}}</span>, where
+    They define a relation <span class="bracket"> ⦃<span class="id">P</span>⦄ <span class="id">c</span> ⦃<span class="id">Q</span>⦄</span>, where
 <ul>
 <li>
    <span class="bracket"><span class="id">P</span></span> is the precondition, assumed to hold "before" executing <span class="bracket"><span class="id">c</span></span>;
@@ -266,98 +266,98 @@ Qed.</div>
   of the command <span class="bracket"><span class="id">c</span></span>.  What is guaranteed is that if <span class="bracket"><span class="id">c</span></span> terminates,
   then its final store satisfies postcondition <span class="bracket"><span class="id">Q</span></span>. </div>
 <br/>
-<span class="kwd">Reserved</span> <span class="kwd">Notation</span> "{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }}" (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
+<span class="kwd">Reserved</span> <span class="kwd">Notation</span> "⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄" (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
 <br/>
 <span class="kwd">Inductive</span> <span class="id"><a name="Hoare">Hoare</a></span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> -&gt; <span class="id"><a href="CDF.Hoare.html#com">com</a></span> -&gt; <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_skip">Hoare_skip</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{ <span class="id">P</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> ⦃ <span class="id">P</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_assign">Hoare_assign</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> {{ <span class="id">P</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> ⦃ <span class="id">P</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_seq">Hoare_seq</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c1</span> {{ <span class="id">Q</span> }} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">Q</span> }} <span class="id">c2</span> {{ <span class="id">R</span> }} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c1</span>;;<span class="id">c2</span> {{ <span class="id">R</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c1</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">Q</span> ⦄ <span class="id">c2</span> ⦃ <span class="id">R</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c1</span>;;<span class="id">c2</span> ⦃ <span class="id">R</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_ifthenelse">Hoare_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c1</span> {{ <span class="id">Q</span> }} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c2</span> {{ <span class="id">Q</span> }} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> {{ <span class="id">Q</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c1</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c2</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> ⦃ <span class="id">Q</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_while">Hoare_while</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">P</span> }} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> {{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">P</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> ⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_havoc">Hoare_havoc</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) }} <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> {{ <span class="id">Q</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) ⦄ <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> ⦃ <span class="id">Q</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_assert">Hoare_assert</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> {{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> ⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄<br/>
 &nbsp;&nbsp;| <span class="id"><a name="Hoare_consequence">Hoare_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">P</span>' <span class="id">Q</span>' <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span>' }} <span class="id">c</span> {{ <span class="id">Q</span>' }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span>' ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span>' ⦄<br/>
 <br/>
-<span class="kwd">where</span> "{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }}" := (<span class="id"><a href="CDF.Hoare.html#Hoare">Hoare</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>).<br/>
+<span class="kwd">where</span> "⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄" := (<span class="id"><a href="CDF.Hoare.html#Hoare">Hoare</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>).<br/>
 <br/>
 <div class="doc">Here are the rules for strong Hoare logic, defining strong triples
-    <span class="bracket"> [[<span class="id">P</span>]] <span class="id">c</span> [[<span class="id">Q</span>]] </span> that guarantee that <span class="bracket"><span class="id">c</span></span> terminates.
+    <span class="bracket"> 〚<span class="id">P</span>〛 <span class="id">c</span> 〚<span class="id">Q</span>〛 </span> that guarantee that <span class="bracket"><span class="id">c</span></span> terminates.
     The only difference with weak triples is the rule for <span class="bracket"><span class="id">while</span></span> loops. </div>
 <br/>
-<span class="kwd">Reserved</span> <span class="kwd">Notation</span> "[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]]" (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
+<span class="kwd">Reserved</span> <span class="kwd">Notation</span> "〚 <span class="id">P</span> 〛 <span class="id">c</span> 〚 <span class="id">Q</span> 〛" (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
 <br/>
 <span class="kwd">Definition</span> <span class="id"><a name="alessthan">alessthan</a></span> (<span class="id">a</span>: <span class="id"><a href="CDF.Hoare.html#aexp">aexp</a></span>) (<span class="id">v</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">s</span> =&gt; 0 &lt;= <span class="id"><a href="CDF.Hoare.html#aeval">aeval</a></span> <span class="id">a</span> <span class="id">s</span> &lt; <span class="id">v</span>.<br/>
 <br/>
 <span class="kwd">Inductive</span> <span class="id"><a name="HOARE">HOARE</a></span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> -&gt; <span class="id"><a href="CDF.Hoare.html#com">com</a></span> -&gt; <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_skip">HOARE_skip</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> [[ <span class="id">P</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> 〚 <span class="id">P</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_assign">HOARE_assign</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> ]] <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> [[ <span class="id">P</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> 〛 <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> 〚 <span class="id">P</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_seq">HOARE_seq</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c1</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">Q</span> ]] <span class="id">c2</span> [[ <span class="id">R</span> ]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c1</span>;;<span class="id">c2</span> [[ <span class="id">R</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id">c1</span> 〚 <span class="id">Q</span> 〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">Q</span> 〛 <span class="id">c2</span> 〚 <span class="id">R</span> 〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id">c1</span>;;<span class="id">c2</span> 〚 <span class="id">R</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_ifthenelse">HOARE_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]] <span class="id">c1</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]] <span class="id">c2</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> [[ <span class="id">Q</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛 <span class="id">c1</span> 〚 <span class="id">Q</span> 〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛 <span class="id">c2</span> 〚 <span class="id">Q</span> 〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> 〚 <span class="id">Q</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_while">HOARE_while</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span> <span class="id">a</span>,<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span>, <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> <span class="id">a</span> <span class="id">v</span> //\\ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id"><a href="CDF.Hoare.html#alessthan">alessthan</a></span> <span class="id">a</span> <span class="id">v</span> //\\ <span class="id">P</span> ]]) -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> [[ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> <span class="id">a</span> <span class="id">v</span> //\\ <span class="id">P</span> 〛 <span class="id">c</span> 〚 <span class="id"><a href="CDF.Hoare.html#alessthan">alessthan</a></span> <span class="id">a</span> <span class="id">v</span> //\\ <span class="id">P</span> 〛) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> 〚 <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_havoc">HOARE_havoc</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) ]] <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> [[ <span class="id">Q</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) 〛 <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> 〚 <span class="id">Q</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_assert">HOARE_assert</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]] <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> [[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛 <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> 〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛<br/>
 &nbsp;&nbsp;| <span class="id"><a name="HOARE_consequence">HOARE_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">P</span>' <span class="id">Q</span>' <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id">c</span> 〚 <span class="id">Q</span> 〛 -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[ <span class="id">P</span>' ]] <span class="id">c</span> [[ <span class="id">Q</span>' ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚 <span class="id">P</span>' 〛 <span class="id">c</span> 〚 <span class="id">Q</span>' 〛<br/>
 <br/>
-<span class="kwd">where</span> "[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]]" := (<span class="id"><a href="CDF.Hoare.html#HOARE">HOARE</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>).<br/>
+<span class="kwd">where</span> "〚 <span class="id">P</span> 〛 <span class="id">c</span> 〚 <span class="id">Q</span> 〛" := (<span class="id"><a href="CDF.Hoare.html#HOARE">HOARE</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>).<br/>
 <br/>
 <h2> 2.3. Derived and admissible rules </h2>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_consequence_pre">Hoare_consequence_pre</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">P</span>' <span class="id">Q</span> <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span>' }} <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span>' ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
 <div class="proofscript" id="proof3">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_consequence">Hoare_consequence</a></span> <span class="kwd">with</span> (<span class="id">P</span> := <span class="id">P</span>) (<span class="id">Q</span> := <span class="id">Q</span>); <span class="tactic">unfold</span> <span class="id"><a href="CDF.Hoare.html#aimp">aimp</a></span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_consequence_post">Hoare_consequence_post</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">Q</span>' <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span>' }}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span>' ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
 <div class="proofscript" id="proof4">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_consequence">Hoare_consequence</a></span> <span class="kwd">with</span> (<span class="id">P</span> := <span class="id">P</span>) (<span class="id">Q</span> := <span class="id">Q</span>); <span class="tactic">unfold</span> <span class="id"><a href="CDF.Hoare.html#aimp">aimp</a></span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Floyd_assign">Floyd_assign</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> {{ <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">x0</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> ⦃ <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">x0</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">x</span>) <span class="id">v</span> //\\<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">x0</span>) (<span class="id">P</span> //\\ <span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> <span class="id">a</span> <span class="id">v</span>))) }}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">x0</span>) (<span class="id">P</span> //\\ <span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> <span class="id">a</span> <span class="id">v</span>))) ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
 <div class="proofscript" id="proof5">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_consequence_pre">Hoare_consequence_pre</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_assign">Hoare_assign</a></span>.<br/>
@@ -377,9 +377,9 @@ Qed.</div>
 <div class="doc">Some derived constructs, with proof rules. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_ifthen">Hoare_ifthen</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> --&gt;&gt; <span class="id">Q</span> -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c</span> <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c</span> <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
 <div class="proofscript" id="proof6">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_ifthenelse">Hoare_ifthenelse</a></span>; <span class="tactic">auto</span>.<br/>
@@ -390,8 +390,8 @@ Qed.</div>
 &nbsp;&nbsp;<span class="id">c</span> ;; <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span>.<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_repeat">Hoare_repeat</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">P</span> }} -&gt;<br/>
-&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#REPEAT">REPEAT</a></span> <span class="id">c</span> <span class="id">b</span> {{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}.<br/>
+&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">P</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#REPEAT">REPEAT</a></span> <span class="id">c</span> <span class="id">b</span> ⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
 <div class="proofscript" id="proof7">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_seq">Hoare_seq</a></span> <span class="kwd">with</span> <span class="id">P</span>. <span class="tactic">auto</span>.<br/>
@@ -425,9 +425,9 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="HOARE_frame">HOARE_frame</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">R</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;[[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] -&gt;<br/>
+&nbsp;&nbsp;〚 <span class="id">P</span> 〛 <span class="id">c</span> 〚 <span class="id">Q</span> 〛 -&gt;<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#independent">independent</a></span> <span class="id">R</span> (<span class="id"><a href="CDF.Hoare.html#assigns">assigns</a></span> <span class="id">c</span>) -&gt;<br/>
-&nbsp;&nbsp;[[ <span class="id">P</span> //\\ <span class="id">R</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> //\\ <span class="id">R</span> ]].<br/>
+&nbsp;&nbsp;〚 <span class="id">P</span> //\\ <span class="id">R</span> 〛 <span class="id">c</span> 〚 <span class="id">Q</span> //\\ <span class="id">R</span> 〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
 <div class="proofscript" id="proof8">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">R</span>.<br/>
@@ -477,11 +477,11 @@ Qed.</div>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> (<span class="id"><a href="CDF.Hoare.html#LESSEQUAL">LESSEQUAL</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">h</span>)) (<span class="id">c</span> ;; <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">i</span> (<span class="id"><a href="CDF.Hoare.html#PLUS">PLUS</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> 1))).<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="HOARE_for">HOARE_for</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">h</span> <span class="id">i</span> <span class="id">c</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> (<span class="id"><a href="CDF.Hoare.html#LESSEQUAL">LESSEQUAL</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">h</span>)) //\\ <span class="id">P</span> ]]<br/>
+&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> (<span class="id"><a href="CDF.Hoare.html#LESSEQUAL">LESSEQUAL</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">h</span>)) //\\ <span class="id">P</span> 〛<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">c</span><br/>
-&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">i</span> (<span class="id"><a href="CDF.Hoare.html#PLUS">PLUS</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> 1)) <span class="id">P</span> ]] -&gt;<br/>
+&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">i</span> (<span class="id"><a href="CDF.Hoare.html#PLUS">PLUS</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> 1)) <span class="id">P</span> 〛 -&gt;<br/>
 &nbsp;&nbsp;~<span class="id"><a href="CDF.Hoare.html#assigns">assigns</a></span> <span class="id">c</span> <span class="id">i</span> -&gt; ~<span class="id"><a href="CDF.Hoare.html#assigns">assigns</a></span> <span class="id">c</span> <span class="id">h</span> -&gt; <span class="id">i</span> &lt;&gt; <span class="id">h</span> -&gt; <br/>
-&nbsp;&nbsp;[[ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">i</span> <span class="id">l</span> <span class="id">P</span> ]] <span class="id"><a href="CDF.Hoare.html#FOR">FOR</a></span> <span class="id">i</span> <span class="id">l</span> <span class="id">h</span> <span class="id">c</span> [[ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> (<span class="id"><a href="CDF.Hoare.html#LESSEQUAL">LESSEQUAL</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">h</span>)) //\\ <span class="id">P</span> ]].<br/>
+&nbsp;&nbsp;〚 <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">i</span> <span class="id">l</span> <span class="id">P</span> 〛 <span class="id"><a href="CDF.Hoare.html#FOR">FOR</a></span> <span class="id">i</span> <span class="id">l</span> <span class="id">h</span> <span class="id">c</span> 〚 <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> (<span class="id"><a href="CDF.Hoare.html#LESSEQUAL">LESSEQUAL</a></span> (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">i</span>) (<span class="id"><a href="CDF.Hoare.html#VAR">VAR</a></span> <span class="id">h</span>)) //\\ <span class="id">P</span> 〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
 <div class="proofscript" id="proof9">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#HOARE_seq">HOARE_seq</a></span> <span class="kwd">with</span> <span class="id">P</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#HOARE_assign">HOARE_assign</a></span>.<br/>
@@ -507,7 +507,7 @@ Qed.</div>
 <div class="doc">Some inversion lemmas. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_skip_inv">Hoare_skip_inv</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{ <span class="id">Q</span> }} -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id">Q</span>).<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> ⦃ <span class="id">Q</span> ⦄ -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id">Q</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
 <div class="proofscript" id="proof10">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>; <span class="tactic">dependent</span> <span class="tactic">induction</span> <span class="id">H</span>.<br/>
@@ -516,7 +516,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_assign_inv">Hoare_assign_inv</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> {{ <span class="id">Q</span> }} -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">Q</span>).<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> ⦃ <span class="id">Q</span> ⦄ -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">Q</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof11')">Proof.</div>
 <div class="proofscript" id="proof11">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>; <span class="tactic">dependent</span> <span class="tactic">induction</span> <span class="id">H</span>.<br/>
@@ -525,8 +525,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_seq_inv">Hoare_seq_inv</a></span>: <span class="kwd">forall</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c1</span> ;; <span class="id">c2</span>  {{ <span class="id">Q</span>  }} -&gt;<br/>
-&nbsp;&nbsp;<span class="id">exists</span> <span class="id">R</span>, {{ <span class="id">P</span> }} <span class="id">c1</span> {{ <span class="id">R</span> }} /\ {{ <span class="id">R</span> }} <span class="id">c2</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c1</span> ;; <span class="id">c2</span>  ⦃ <span class="id">Q</span>  ⦄ -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">R</span>, ⦃ <span class="id">P</span> ⦄ <span class="id">c1</span> ⦃ <span class="id">R</span> ⦄ /\ ⦃ <span class="id">R</span> ⦄ <span class="id">c2</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof12')">Proof.</div>
 <div class="proofscript" id="proof12">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>; <span class="tactic">dependent</span> <span class="tactic">induction</span> <span class="id">H</span>.<br/>
@@ -536,8 +536,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_ifthenelse_inv">Hoare_ifthenelse_inv</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> {{ <span class="id">Q</span> }} -&gt;<br/>
-&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c1</span> {{ <span class="id">Q</span> }} /\ {{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }} <span class="id">c2</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c1</span> ⦃ <span class="id">Q</span> ⦄ /\ ⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄ <span class="id">c2</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof13')">Proof.</div>
 <div class="proofscript" id="proof13">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>; <span class="tactic">dependent</span> <span class="tactic">induction</span> <span class="id">H</span>.<br/>
@@ -549,8 +549,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_while_inv">Hoare_while_inv</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">c</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
-&nbsp;&nbsp;<span class="id">exists</span> <span class="id">Inv</span>, {{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">Inv</span> }} <span class="id">c</span> {{ <span class="id">Inv</span> }}<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">Inv</span>, ⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">Inv</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Inv</span> ⦄<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (<span class="id">P</span> --&gt;&gt; <span class="id">Inv</span>) /\ (<span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">Inv</span> --&gt;&gt; <span class="id">Q</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof14')">Proof.</div>
 <div class="proofscript" id="proof14">
@@ -561,7 +561,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_havoc_inv">Hoare_havoc_inv</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> {{ <span class="id">Q</span> }} -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>)).<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> ⦃ <span class="id">Q</span> ⦄ -&gt; (<span class="id">P</span> --&gt;&gt; <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>)).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof15')">Proof.</div>
 <div class="proofscript" id="proof15">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">x</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>; <span class="tactic">dependent</span> <span class="tactic">induction</span> <span class="id">H</span>.<br/>
@@ -570,7 +570,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_assert_inv">Hoare_assert_inv</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;<span class="id">exists</span> <span class="id">R</span>, (<span class="id">P</span> --&gt;&gt; <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">R</span>) /\ (<span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">R</span> --&gt;&gt; <span class="id">Q</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof16')">Proof.</div>
 <div class="proofscript" id="proof16">
@@ -584,8 +584,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_conj">Hoare_conj</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q1</span> <span class="id">Q2</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P1</span> }} <span class="id">c</span> {{ <span class="id">Q1</span> }} -&gt; {{ <span class="id">P2</span> }} <span class="id">c</span> {{ <span class="id">Q2</span> }} -&gt;<br/>
-&nbsp;&nbsp;{{ <span class="id">P1</span> //\\ <span class="id">P2</span> }} <span class="id">c</span> {{ <span class="id">Q1</span> //\\ <span class="id">Q2</span> }}.<br/>
+&nbsp;&nbsp;⦃ <span class="id">P1</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q1</span> ⦄ -&gt; ⦃ <span class="id">P2</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q2</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P1</span> //\\ <span class="id">P2</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q1</span> //\\ <span class="id">Q2</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof17')">Proof.</div>
 <div class="proofscript" id="proof17">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span>.<br/>
@@ -619,8 +619,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_disj">Hoare_disj</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q1</span> <span class="id">Q2</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P1</span> }} <span class="id">c</span> {{ <span class="id">Q1</span> }} -&gt; {{ <span class="id">P2</span> }} <span class="id">c</span> {{ <span class="id">Q2</span> }} -&gt;<br/>
-&nbsp;&nbsp;{{ <span class="id">P1</span> \\// <span class="id">P2</span> }} <span class="id">c</span> {{ <span class="id">Q1</span> \\// <span class="id">Q2</span> }}.<br/>
+&nbsp;&nbsp;⦃ <span class="id">P1</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q1</span> ⦄ -&gt; ⦃ <span class="id">P2</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q2</span> ⦄ -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P1</span> \\// <span class="id">P2</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q1</span> \\// <span class="id">Q2</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof18')">Proof.</div>
 <div class="proofscript" id="proof18">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span>.<br/>
@@ -660,8 +660,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_exists">Hoare_exists</a></span>:<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#choice_axiom">choice_axiom</a></span> -&gt;<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) <span class="id">c</span> (<span class="id">P</span> <span class="id">Q</span>: <span class="id">X</span> -&gt; <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>),<br/>
-&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, {{ <span class="id">P</span> <span class="id">x</span> }} <span class="id">c</span> {{ <span class="id">Q</span> <span class="id">x</span> }}) -&gt;<br/>
-&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, ⦃ <span class="id">P</span> <span class="id">x</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> <span class="id">x</span> ⦄) -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id"><a href="CDF.Hoare.html#aexists">aexists</a></span> <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof19')">Proof.</div>
 <div class="proofscript" id="proof19">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">CHOICE</span> <span class="id">X</span>. <span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>.<br/>
@@ -717,8 +717,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="Hoare_forall">Hoare_forall</a></span>:<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#choice_axiom">choice_axiom</a></span> -&gt;<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) (<span class="id">inhabited</span>: <span class="id">X</span>) <span class="id">c</span> (<span class="id">P</span> <span class="id">Q</span>: <span class="id">X</span> -&gt; <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>),<br/>
-&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, {{ <span class="id">P</span> <span class="id">x</span> }} <span class="id">c</span> {{ <span class="id">Q</span> <span class="id">x</span> }}) -&gt;<br/>
-&nbsp;&nbsp;{{ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, ⦃ <span class="id">P</span> <span class="id">x</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> <span class="id">x</span> ⦄) -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof20')">Proof.</div>
 <div class="proofscript" id="proof20">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">CHOICE</span> <span class="id">X</span> <span class="id">inhabited</span>; <span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">H</span>.<br/>
@@ -781,7 +781,7 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness1.Hoare_safe">Hoare_safe</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>, <span class="id">P</span> <span class="id">s</span> -&gt; ~(<span class="id"><a href="CDF.Hoare.html#error">error</a></span> <span class="id">c</span> <span class="id">s</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof21')">Proof.</div>
 <div class="proofscript" id="proof21">
@@ -790,9 +790,9 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness1.Hoare_step">Hoare_step</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt;<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">c</span>' <span class="id">s</span>',<br/>
-&nbsp;&nbsp;<span class="id">P</span> <span class="id">s</span> -&gt; <span class="tactic">red</span> (<span class="id">c</span>, <span class="id">s</span>) (<span class="id">c</span>', <span class="id">s</span>') -&gt; <span class="id">exists</span> <span class="id">P</span>', {{ <span class="id">P</span>' }} <span class="id">c</span>' {{ <span class="id">Q</span> }} /\ <span class="id">P</span>' <span class="id">s</span>'.<br/>
+&nbsp;&nbsp;<span class="id">P</span> <span class="id">s</span> -&gt; <span class="tactic">red</span> (<span class="id">c</span>, <span class="id">s</span>) (<span class="id">c</span>', <span class="id">s</span>') -&gt; <span class="id">exists</span> <span class="id">P</span>', ⦃ <span class="id">P</span>' ⦄ <span class="id">c</span>' ⦃ <span class="id">Q</span> ⦄ /\ <span class="id">P</span>' <span class="id">s</span>'.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof22')">Proof.</div>
 <div class="proofscript" id="proof22">
 &nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">s</span> <span class="id">c</span>' <span class="id">s</span>' <span class="id">Ps</span> <span class="id">RED</span>.<br/>
@@ -821,8 +821,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Corollary</span> <span class="id"><a name="Soundness1.Hoare_steps">Hoare_steps</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">c</span> <span class="id">s</span> <span class="id">c</span>' <span class="id">s</span>',<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt; <span class="id">P</span> <span class="id">s</span> -&gt; <span class="id"><a href="CDF.Sequences.html#star">star</a></span> <span class="tactic">red</span> (<span class="id">c</span>, <span class="id">s</span>) (<span class="id">c</span>', <span class="id">s</span>') -&gt;<br/>
-&nbsp;&nbsp;<span class="id">exists</span> <span class="id">P</span>', {{ <span class="id">P</span>' }} <span class="id">c</span>' {{ <span class="id">Q</span> }} /\ <span class="id">P</span>' <span class="id">s</span>'.<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt; <span class="id">P</span> <span class="id">s</span> -&gt; <span class="id"><a href="CDF.Sequences.html#star">star</a></span> <span class="tactic">red</span> (<span class="id">c</span>, <span class="id">s</span>) (<span class="id">c</span>', <span class="id">s</span>') -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">P</span>', ⦃ <span class="id">P</span>' ⦄ <span class="id">c</span>' ⦃ <span class="id">Q</span> ⦄ /\ <span class="id">P</span>' <span class="id">s</span>'.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof23')">Proof.</div>
 <div class="proofscript" id="proof23">
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">REC</span>: <span class="kwd">forall</span> <span class="id">cs</span> <span class="id">cs</span>', <span class="id"><a href="CDF.Sequences.html#star">star</a></span> <span class="tactic">red</span> <span class="id">cs</span> <span class="id">cs</span>' -&gt;<br/>
@@ -839,7 +839,7 @@ Qed.</div>
 <br/>
 <span class="kwd">Corollary</span> <span class="id"><a name="Soundness1.Hoare_sound">Hoare_sound</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> <span class="id">s</span>,<br/>
-&nbsp;&nbsp;{{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt; <span class="id">P</span> <span class="id">s</span> -&gt;<br/>
+&nbsp;&nbsp;⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt; <span class="id">P</span> <span class="id">s</span> -&gt;<br/>
 &nbsp;&nbsp;~ <span class="id"><a href="CDF.Hoare.html#goeswrong">goeswrong</a></span> <span class="id">c</span> <span class="id">s</span> /\ (<span class="kwd">forall</span> <span class="id">s</span>', <span class="id"><a href="CDF.Hoare.html#terminates">terminates</a></span> <span class="id">c</span> <span class="id">s</span> <span class="id">s</span>' -&gt; <span class="id">Q</span> <span class="id">s</span>').<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof24')">Proof.</div>
 <div class="proofscript" id="proof24">
@@ -870,17 +870,17 @@ Qed.</div>
 <span class="kwd">Definition</span> <span class="id"><a name="Soundness2.Triple">Triple</a></span> (<span class="id">P</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Hoare.html#com">com</a></span>) (<span class="id">Q</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) : <span class="kwd">Prop</span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>, <span class="id">P</span> <span class="id">s</span> -&gt; <span class="id"><a href="CDF.Hoare.html#Soundness2.safe">safe</a></span> <span class="id">Q</span> <span class="id">c</span> <span class="id">s</span>.<br/>
 <br/>
-<span class="kwd">Notation</span> "[[[ <span class="id">P</span> ]]] <span class="id">c</span> [[[ <span class="id">Q</span> ]]]" := (<span class="id"><a href="CDF.Hoare.html#Soundness2.Triple">Triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
+<span class="kwd">Notation</span> "〚〚 <span class="id">P</span> 〛〛 <span class="id">c</span> 〚〚 <span class="id">Q</span> 〛〛" := (<span class="id"><a href="CDF.Hoare.html#Soundness2.Triple">Triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_skip">Triple_skip</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span> ]]] <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> [[[ <span class="id">P</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span> 〛〛 <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> 〚〚 <span class="id">P</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof25')">Proof.</div>
 <div class="proofscript" id="proof25">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness2.safe_now">safe_now</a></span>. <span class="tactic">reflexivity</span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_assign">Triple_assign</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> ]]] <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> [[[ <span class="id">P</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> 〛〛 <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> 〚〚 <span class="id">P</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof26')">Proof.</div>
 <div class="proofscript" id="proof26">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness2.safe_step">safe_step</a></span>.<br/>
@@ -906,17 +906,17 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_seq">Triple_seq</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span> ]]] <span class="id">c1</span> [[[ <span class="id">Q</span> ]]] -&gt; [[[ <span class="id">Q</span> ]]] <span class="id">c2</span> [[[ <span class="id">R</span> ]]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span> ]]] <span class="id">c1</span>;;<span class="id">c2</span> [[[ <span class="id">R</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span> 〛〛 <span class="id">c1</span> 〚〚 <span class="id">Q</span> 〛〛 -&gt; 〚〚 <span class="id">Q</span> 〛〛 <span class="id">c2</span> 〚〚 <span class="id">R</span> 〛〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span> 〛〛 <span class="id">c1</span>;;<span class="id">c2</span> 〚〚 <span class="id">R</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof28')">Proof.</div>
 <div class="proofscript" id="proof28">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness2.safe_seq">safe_seq</a></span> <span class="kwd">with</span> <span class="id">Q</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_ifthenelse">Triple_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]] <span class="id">c1</span> [[[ <span class="id">Q</span> ]]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]] <span class="id">c2</span> [[[ <span class="id">Q</span> ]]] -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span> ]]] <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> [[[ <span class="id">Q</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛〛 <span class="id">c1</span> 〚〚 <span class="id">Q</span> 〛〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛〛 <span class="id">c2</span> 〚〚 <span class="id">Q</span> 〛〛 -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span> 〛〛 <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> 〚〚 <span class="id">Q</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof29')">Proof.</div>
 <div class="proofscript" id="proof29">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness2.safe_step">safe_step</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Hoare.html#terminated">terminated</a></span>; <span class="tactic">congruence</span>. <span class="id">cbn</span>; <span class="tactic">auto</span>.<br/>
@@ -928,11 +928,11 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_while">Triple_while</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">variant</span> <span class="id">b</span> <span class="id">c</span>,<br/>
 &nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">v</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> <span class="id">variant</span> <span class="id">v</span> //\\ <span class="id">P</span> ]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id"><a href="CDF.Hoare.html#aequal">aequal</a></span> <span class="id">variant</span> <span class="id">v</span> //\\ <span class="id">P</span> 〛〛<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">c</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#alessthan">alessthan</a></span> <span class="id">variant</span> <span class="id">v</span> //\\ <span class="id">P</span> ]]])<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#alessthan">alessthan</a></span> <span class="id">variant</span> <span class="id">v</span> //\\ <span class="id">P</span> 〛〛)<br/>
 &nbsp;&nbsp;-&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span> ]]] <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> [[[ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span> 〛〛 <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> 〚〚 <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof30')">Proof.</div>
 <div class="proofscript" id="proof30">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">variant</span> <span class="id">b</span> <span class="id">c</span> <span class="id">T</span>.<br/>
@@ -950,7 +950,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_havoc">Triple_havoc</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) ]]] <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> [[[ <span class="id">Q</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) 〛〛 <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> 〚〚 <span class="id">Q</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof31')">Proof.</div>
 <div class="proofscript" id="proof31">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness2.safe_step">safe_step</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Hoare.html#terminated">terminated</a></span>; <span class="tactic">congruence</span>. <span class="id">cbn</span>; <span class="tactic">auto</span>.<br/>
@@ -958,7 +958,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_assert">Triple_assert</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]] <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> [[[ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛〛 <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> 〚〚 <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof32')">Proof.</div>
 <div class="proofscript" id="proof32">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">s</span> [<span class="id">PRE1</span> <span class="id">PRE2</span>]. <span class="tactic">red</span> <span class="kwd">in</span> <span class="id">PRE1</span>.<br/>
@@ -967,8 +967,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness2.Triple_consequence">Triple_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">P</span>' <span class="id">Q</span>' <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span> ]]] <span class="id">c</span> [[[ <span class="id">Q</span> ]]] -&gt; <span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt; <span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[ <span class="id">P</span>' ]]] <span class="id">c</span> [[[ <span class="id">Q</span>' ]]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span> 〛〛 <span class="id">c</span> 〚〚 <span class="id">Q</span> 〛〛 -&gt; <span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt; <span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;〚〚 <span class="id">P</span>' 〛〛 <span class="id">c</span> 〚〚 <span class="id">Q</span>' 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof33')">Proof.</div>
 <div class="proofscript" id="proof33">
 &nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
@@ -981,7 +981,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="Soundness2.HOARE_sound">HOARE_sound</a></span>:<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, [[ <span class="id">P</span> ]] <span class="id">c</span> [[ <span class="id">Q</span> ]] -&gt; [[[ <span class="id">P</span> ]]] <span class="id">c</span> [[[ <span class="id">Q</span> ]]].<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, 〚 <span class="id">P</span> 〛 <span class="id">c</span> 〚 <span class="id">Q</span> 〛 -&gt; 〚〚 <span class="id">P</span> 〛〛 <span class="id">c</span> 〚〚 <span class="id">Q</span> 〛〛.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof34')">Proof.</div>
 <div class="proofscript" id="proof34">
 &nbsp;&nbsp;<span class="tactic">induction</span> 1.<br/>
@@ -1034,17 +1034,17 @@ Qed.</div>
 <span class="kwd">Definition</span> <span class="id"><a name="Soundness3.triple">triple</a></span> (<span class="id">P</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Hoare.html#com">com</a></span>) (<span class="id">Q</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) : <span class="kwd">Prop</span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>, <span class="id">P</span> <span class="id">s</span> -&gt; <span class="id"><a href="CDF.Hoare.html#Soundness3.safe">safe</a></span> <span class="id">Q</span> <span class="id">c</span> <span class="id">s</span>.<br/>
 <br/>
-<span class="kwd">Notation</span> "{{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}}" := (<span class="id"><a href="CDF.Hoare.html#Soundness3.triple">triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
+<span class="kwd">Notation</span> "⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄" := (<span class="id"><a href="CDF.Hoare.html#Soundness3.triple">triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_skip">triple_skip</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{{ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> ⦃⦃ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof38')">Proof.</div>
 <div class="proofscript" id="proof38">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness3.safe_now">safe_now</a></span>. <span class="tactic">reflexivity</span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_assign">triple_assign</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> {{{ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> ⦃⦃ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof39')">Proof.</div>
 <div class="proofscript" id="proof39">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness3.safe_step">safe_step</a></span>.<br/>
@@ -1070,16 +1070,16 @@ Qed.</div>
 Defined.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_seq">triple_seq</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id">c1</span> {{{ <span class="id">Q</span> }}} -&gt; {{{ <span class="id">Q</span> }}} <span class="id">c2</span> {{{ <span class="id">R</span> }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id">c1</span>;;<span class="id">c2</span> {{{ <span class="id">R</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c1</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt; ⦃⦃ <span class="id">Q</span> ⦄⦄ <span class="id">c2</span> ⦃⦃ <span class="id">R</span> ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c1</span>;;<span class="id">c2</span> ⦃⦃ <span class="id">R</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof41')">Proof.</div>
 <div class="proofscript" id="proof41">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness3.safe_seq">safe_seq</a></span> <span class="kwd">with</span> <span class="id">Q</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_while">triple_while</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">P</span>  }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> {{{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">P</span>  ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> ⦃⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof42')">Proof.</div>
 <div class="proofscript" id="proof42">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span> <span class="id">T</span>.<br/>
@@ -1096,9 +1096,9 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_ifthenelse">triple_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id">c1</span> {{{ <span class="id">Q</span> }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id">c2</span> {{{ <span class="id">Q</span> }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> {{{ <span class="id">Q</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id">c1</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id">c2</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> ⦃⦃ <span class="id">Q</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof43')">Proof.</div>
 <div class="proofscript" id="proof43">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness3.safe_step">safe_step</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Hoare.html#terminated">terminated</a></span>; <span class="tactic">congruence</span>. <span class="id">cbn</span>; <span class="tactic">auto</span>.<br/>
@@ -1109,7 +1109,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_havoc">triple_havoc</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) }}} <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> {{{ <span class="id">Q</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) ⦄⦄ <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> ⦃⦃ <span class="id">Q</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof44')">Proof.</div>
 <div class="proofscript" id="proof44">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness3.safe_step">safe_step</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="CDF.Hoare.html#terminated">terminated</a></span>; <span class="tactic">congruence</span>. <span class="id">cbn</span>; <span class="tactic">auto</span>.<br/>
@@ -1117,7 +1117,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_assert">triple_assert</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> {{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> ⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof45')">Proof.</div>
 <div class="proofscript" id="proof45">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">s</span> [<span class="id">PRE1</span> <span class="id">PRE2</span>]. <span class="tactic">red</span> <span class="kwd">in</span> <span class="id">PRE1</span>.<br/>
@@ -1126,8 +1126,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness3.triple_consequence">triple_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">P</span>' <span class="id">Q</span>' <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}} -&gt; <span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt; <span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span>' }}} <span class="id">c</span> {{{ <span class="id">Q</span>' }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt; <span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt; <span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span>' ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span>' ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof46')">Proof.</div>
 <div class="proofscript" id="proof46">
 &nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
@@ -1140,7 +1140,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="Soundness3.Hoare_sound">Hoare_sound</a></span>:<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, {{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt; {{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}}.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, ⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt; ⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof47')">Proof.</div>
 <div class="proofscript" id="proof47">
 &nbsp;&nbsp;<span class="tactic">induction</span> 1.<br/>
@@ -1174,7 +1174,7 @@ Qed.</div>
 <span class="kwd">Definition</span> <span class="id"><a name="Soundness4.triple">triple</a></span> (<span class="id">P</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) (<span class="id">c</span>: <span class="id"><a href="CDF.Hoare.html#com">com</a></span>) (<span class="id">Q</span>: <span class="id"><a href="CDF.Hoare.html#assertion">assertion</a></span>) : <span class="kwd">Prop</span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">s</span>, <span class="id">P</span> <span class="id">s</span> -&gt; <span class="id"><a href="CDF.Hoare.html#Soundness4.safe">safe</a></span> <span class="id">Q</span> <span class="id">n</span> <span class="id">c</span> <span class="id">s</span>.<br/>
 <br/>
-<span class="kwd">Notation</span> "{{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}}" := (<span class="id"><a href="CDF.Hoare.html#Soundness4.triple">triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
+<span class="kwd">Notation</span> "⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄" := (<span class="id"><a href="CDF.Hoare.html#Soundness4.triple">triple</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>) (<span class="tactic">at</span> <span class="id">level</span> 90, <span class="id">c</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>).<br/>
 <br/>
 <div class="doc">Properties of <span class="bracket"><span class="id">safe</span></span>. </div>
 <br/>
@@ -1223,14 +1223,14 @@ Qed.</div>
 <div class="doc">Deduction rules. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_skip">triple_skip</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> {{{ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#SKIP">SKIP</a></span> ⦃⦃ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof53')">Proof.</div>
 <div class="proofscript" id="proof53">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">n</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id">safe_now</span>'. <span class="tactic">reflexivity</span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_assign">triple_assign</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> {{{ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> <span class="id">a</span> <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#ASSIGN">ASSIGN</a></span> <span class="id">x</span> <span class="id">a</span> ⦃⦃ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof54')">Proof.</div>
 <div class="proofscript" id="proof54">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">x</span> <span class="id">a</span> <span class="id">n</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">destruct</span> <span class="id">n</span>. <span class="id">constructor</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness4.safe_step">safe_step</a></span>.<br/>
@@ -1257,16 +1257,16 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_seq">triple_seq</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id">c1</span> {{{ <span class="id">Q</span> }}} -&gt; {{{ <span class="id">Q</span> }}} <span class="id">c2</span> {{{ <span class="id">R</span> }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id">c1</span>;;<span class="id">c2</span> {{{ <span class="id">R</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c1</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt; ⦃⦃ <span class="id">Q</span> ⦄⦄ <span class="id">c2</span> ⦃⦃ <span class="id">R</span> ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c1</span>;;<span class="id">c2</span> ⦃⦃ <span class="id">R</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof56')">Proof.</div>
 <div class="proofscript" id="proof56">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">n</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Soundness4.safe_seq">safe_seq</a></span> <span class="kwd">with</span> <span class="id">Q</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_while">triple_while</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">P</span>  }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> {{{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">P</span>  ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#WHILE">WHILE</a></span> <span class="id">b</span> <span class="id">c</span> ⦃⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof57')">Proof.</div>
 <div class="proofscript" id="proof57">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">b</span> <span class="id">c</span> <span class="id">T</span>. <span class="tactic">red</span>. <span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">intros</span> <span class="id">s</span> <span class="id">Ps</span>. <span class="id">constructor</span>.<br/>
@@ -1278,9 +1278,9 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_ifthenelse">triple_ifthenelse</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id">c1</span> {{{ <span class="id">Q</span> }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id">c2</span> {{{ <span class="id">Q</span> }}} -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> {{{ <span class="id">Q</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id">c1</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#afalse">afalse</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id">c2</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#IFTHENELSE">IFTHENELSE</a></span> <span class="id">b</span> <span class="id">c1</span> <span class="id">c2</span> ⦃⦃ <span class="id">Q</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof58')">Proof.</div>
 <div class="proofscript" id="proof58">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">n</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">destruct</span> <span class="id">n</span>. <span class="id">constructor</span>.<br/>
@@ -1292,7 +1292,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_havoc">triple_havoc</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) }}} <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> {{{ <span class="id">Q</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#aforall">aforall</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="CDF.Hoare.html#aupdate">aupdate</a></span> <span class="id">x</span> (<span class="id"><a href="CDF.Hoare.html#CONST">CONST</a></span> <span class="id">n</span>) <span class="id">Q</span>) ⦄⦄ <span class="id"><a href="CDF.Hoare.html#HAVOC">HAVOC</a></span> <span class="id">x</span> ⦃⦃ <span class="id">Q</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof59')">Proof.</div>
 <div class="proofscript" id="proof59">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">n</span> <span class="id">s</span> <span class="id">PRE</span>. <span class="tactic">destruct</span> <span class="id">n</span>. <span class="id">constructor</span>.<br/>
@@ -1301,7 +1301,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_assert">triple_assert</a></span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}} <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> {{{ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄ <span class="id"><a href="CDF.Hoare.html#ASSERT">ASSERT</a></span> <span class="id">b</span> ⦃⦃ <span class="id"><a href="CDF.Hoare.html#atrue">atrue</a></span> <span class="id">b</span> //\\ <span class="id">P</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof60')">Proof.</div>
 <div class="proofscript" id="proof60">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">n</span> <span class="id">s</span> [<span class="id">PRE1</span> <span class="id">PRE2</span>]. <span class="tactic">red</span> <span class="kwd">in</span> <span class="id">PRE1</span>.<br/>
@@ -1311,8 +1311,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Soundness4.triple_consequence">triple_consequence</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">P</span>' <span class="id">Q</span>' <span class="id">c</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}} -&gt; <span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt; <span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{{ <span class="id">P</span>' }}} <span class="id">c</span> {{{ <span class="id">Q</span>' }}}.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt; <span class="id">P</span>' --&gt;&gt; <span class="id">P</span> -&gt; <span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⦃⦃ <span class="id">P</span>' ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span>' ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof61')">Proof.</div>
 <div class="proofscript" id="proof61">
 &nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
@@ -1326,7 +1326,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="Soundness4.Hoare_sound">Hoare_sound</a></span>:<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, {{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }} -&gt; {{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}}.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, ⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄ -&gt; ⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof62')">Proof.</div>
 <div class="proofscript" id="proof62">
 &nbsp;&nbsp;<span class="tactic">induction</span> 1.<br/>
@@ -1377,7 +1377,7 @@ Qed.</div>
     of Hoare logic. </div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="Completeness.Hoare_sem_wp">Hoare_sem_wp</a></span>:<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">Q</span>, {{ <span class="id"><a href="CDF.Hoare.html#Completeness.sem_wp">sem_wp</a></span> <span class="id">c</span> <span class="id">Q</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span> <span class="id">Q</span>, ⦃ <span class="id"><a href="CDF.Hoare.html#Completeness.sem_wp">sem_wp</a></span> <span class="id">c</span> <span class="id">Q</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof65')">Proof.</div>
 <div class="proofscript" id="proof65">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span> <span class="id">Q</span>.<br/>
@@ -1424,7 +1424,7 @@ Qed.</div>
 <div class="doc">Relative completeness follows. </div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="Completeness.Hoare_complete">Hoare_complete</a></span>:<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, {{{ <span class="id">P</span> }}} <span class="id">c</span> {{{ <span class="id">Q</span> }}} -&gt; {{ <span class="id">P</span> }} <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>, ⦃⦃ <span class="id">P</span> ⦄⦄ <span class="id">c</span> ⦃⦃ <span class="id">Q</span> ⦄⦄ -&gt; ⦃ <span class="id">P</span> ⦄ <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof66')">Proof.</div>
 <div class="proofscript" id="proof66">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_consequence_pre">Hoare_consequence_pre</a></span> <span class="kwd">with</span> (<span class="id"><a href="CDF.Hoare.html#Completeness.sem_wp">sem_wp</a></span> <span class="id">c</span> <span class="id">Q</span>). <br/>
@@ -1488,7 +1488,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#WP.vcond">vcond</a></span> <span class="id">c</span> <span class="id">Q</span> /\ (<span class="id">P</span> --&gt;&gt; <span class="id"><a href="CDF.Hoare.html#WP.wlp">wlp</a></span> <span class="id">c</span> <span class="id">Q</span>).<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="WP.wlp_sound">wlp_sound</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#WP.vcond">vcond</a></span> <span class="id">c</span> <span class="id">Q</span> -&gt; {{ <span class="id"><a href="CDF.Hoare.html#WP.wlp">wlp</a></span> <span class="id">c</span> <span class="id">Q</span> }} <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#WP.vcond">vcond</a></span> <span class="id">c</span> <span class="id">Q</span> -&gt; ⦃ <span class="id"><a href="CDF.Hoare.html#WP.wlp">wlp</a></span> <span class="id">c</span> <span class="id">Q</span> ⦄ <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof67')">Proof.</div>
 <div class="proofscript" id="proof67">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span> <span class="id">Q</span> <span class="id">VC</span>; <span class="id">cbn</span>.<br/>
@@ -1509,7 +1509,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="WP.vcgen_sound">vcgen_sound</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#WP.vcgen">vcgen</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> -&gt; {{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#WP.vcgen">vcgen</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> -&gt; ⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof68')">Proof.</div>
 <div class="proofscript" id="proof68">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> [<span class="id">VC1</span> <span class="id">VC2</span>]. <span class="tactic">eapply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_consequence_pre">Hoare_consequence_pre</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#WP.wlp_sound">wlp_sound</a></span>; <span class="tactic">auto</span>. <span class="tactic">auto</span>.<br/>
@@ -1552,7 +1552,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#SP.vcond">vcond</a></span> <span class="id">P</span> <span class="id">c</span> /\ (<span class="id"><a href="CDF.Hoare.html#SP.sp">sp</a></span> <span class="id">P</span> <span class="id">c</span> --&gt;&gt; <span class="id">Q</span>).<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="SP.sp_sound">sp_sound</a></span>: <span class="kwd">forall</span> <span class="id">c</span> <span class="id">P</span>,<br/>
-&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#SP.vcond">vcond</a></span> <span class="id">P</span> <span class="id">c</span> -&gt; {{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> {{ <span class="id"><a href="CDF.Hoare.html#SP.sp">sp</a></span> <span class="id">P</span> <span class="id">c</span> }}.<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#SP.vcond">vcond</a></span> <span class="id">P</span> <span class="id">c</span> -&gt; ⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> ⦃ <span class="id"><a href="CDF.Hoare.html#SP.sp">sp</a></span> <span class="id">P</span> <span class="id">c</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof69')">Proof.</div>
 <div class="proofscript" id="proof69">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">c</span>; <span class="tactic">intros</span> <span class="id">P</span> <span class="id">VC</span>; <span class="id">cbn</span>.<br/>
@@ -1580,7 +1580,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id"><a name="SP.vcgen_sound">vcgen_sound</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span>,<br/>
-&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#SP.vcgen">vcgen</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> -&gt; {{ <span class="id">P</span> }} <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> {{ <span class="id">Q</span> }}.<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Hoare.html#SP.vcgen">vcgen</a></span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> -&gt; ⦃ <span class="id">P</span> ⦄ <span class="id"><a href="CDF.Hoare.html#WP.erase">erase</a></span> <span class="id">c</span> ⦃ <span class="id">Q</span> ⦄.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof70')">Proof.</div>
 <div class="proofscript" id="proof70">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">c</span> <span class="id">Q</span> [<span class="id">VC1</span> <span class="id">VC2</span>]. <span class="tactic">eapply</span> <span class="id"><a href="CDF.Hoare.html#Hoare_consequence_post">Hoare_consequence_post</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Hoare.html#SP.sp_sound">sp_sound</a></span>; <span class="tactic">auto</span>. <span class="tactic">auto</span>.<br/>
