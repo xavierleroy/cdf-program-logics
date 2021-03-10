@@ -42,7 +42,7 @@ h1, h2, h3 {
 div.coq {
   margin-left: 15%;
   margin-right: 5%;
-  font-family: monospace;
+  font-family: monospace, DejaVu Sans;
 }
 
 div.doc {
