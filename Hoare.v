@@ -359,15 +359,15 @@ Proof.
   apply Hoare_consequence_pre with Q; auto using Hoare_skip.
 Qed.
 
-Definition REPEAT (c: com) (b: bexp) : com :=
+Definition DOWHILE (c: com) (b: bexp) : com :=
   c ;; WHILE b c.
 
-Lemma Hoare_repeat: forall P b c,
-  ⦃ atrue b //\\ P ⦄ c ⦃ P ⦄ ->
-  ⦃ atrue b //\\ P ⦄ REPEAT c b ⦃ afalse b //\\ P ⦄.
+Lemma Hoare_dowhile: forall P b c Q,
+  ⦃ P ⦄ c ⦃ Q ⦄ -> (atrue b //\\ Q -->> P) ->
+  ⦃ P ⦄ DOWHILE c b ⦃ afalse b //\\ Q ⦄.
 Proof.
-  intros. apply Hoare_seq with P. auto.
-  apply Hoare_while. auto.
+  intros. apply Hoare_seq with Q. auto.
+  apply Hoare_while. apply Hoare_consequence_pre with P; auto.
 Qed.
 
 (** A frame rule for strong triples.  Used to reason about "for" loops below. *)
