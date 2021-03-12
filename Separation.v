@@ -312,7 +312,7 @@ Proof.
   rewrite hunion_empty; auto.
 Qed.
 
-Lemma lift_simple_conj: forall P Q R, (P //\\ Q) ** R = P //\\ (Q ** R).
+Lemma lift_pureconj: forall P Q R, (P //\\ Q) ** R = P //\\ (Q ** R).
 Proof.
   intros. rewrite <- ! pureconj_sepconj. rewrite sepconj_assoc. auto.
 Qed.
@@ -325,6 +325,26 @@ Proof.
   exists a, h1, h2; auto.
 - intros (a & h1 & h2 & P1 & Q2 & DISJ & EQ).
   exists h1, h2; intuition auto. exists a; auto.
+Qed.
+
+Lemma sepconj_swap3: forall R P Q, P ** Q ** R = R ** P ** Q.
+Proof.
+  intros. rewrite <- sepconj_assoc, sepconj_comm. auto.
+Qed. 
+
+Lemma sepconj_swap4: forall S P Q R, P ** Q ** R ** S = S ** P ** Q ** R.
+Proof.
+  intros. rewrite <- sepconj_assoc, sepconj_swap3, sepconj_assoc. auto.
+Qed. 
+
+Lemma sepconj_pick2: forall Q P R, P ** Q ** R = Q ** P ** R.
+Proof.
+  intros. rewrite (sepconj_comm Q), <- sepconj_assoc, sepconj_comm. auto.
+Qed. 
+
+Lemma sepconj_pick3: forall R P Q S, P ** Q ** R ** S = R ** P ** Q ** S.
+Proof.
+  intros. rewrite (sepconj_pick2 R), (sepconj_pick2 P). auto. 
 Qed.
 
 (** ** Magic wand *)

@@ -235,7 +235,7 @@ Proof.
   + lia.
   + apply FIN. lia.
 - intros c' h' RED; inv RED. constructor.
-  rewrite lift_simple_conj; split. auto. apply valid_N_init; auto.
+  rewrite lift_pureconj; split. auto. apply valid_N_init; auto.
 Qed. 
 
 Lemma triple_free: forall l,
@@ -366,7 +366,7 @@ Lemma triple_ifthenelse: forall b c1 c2 P Q,
   ⦃ P ⦄ IFTHENELSE b c1 c2 ⦃ Q ⦄.
 Proof.
   intros b c1 c2 P Q TR1 TR2 R.
-  apply Hoare_ifthenelse; rewrite <- lift_simple_conj; auto.
+  apply Hoare_ifthenelse; rewrite <- lift_pureconj; auto.
 Qed.
 
 Lemma Hoare_consequence: forall P P' c Q' Q,
@@ -430,7 +430,7 @@ Lemma triple_lift_pure: forall (P: Prop) P' c Q,
   (P -> ⦃ P' ⦄ c ⦃ Q ⦄) ->
   ⦃ P //\\ P' ⦄ c ⦃ Q ⦄.
 Proof.
-  intros. intros R h Ph. rewrite lift_simple_conj in Ph. destruct Ph as [P1 P2].
+  intros. intros R h Ph. rewrite lift_pureconj in Ph. destruct Ph as [P1 P2].
   apply H; auto.
 Qed.
 
@@ -503,12 +503,12 @@ Lemma list_cons_correct: forall a n l,
 Proof.
   intros. eapply triple_let.
   rewrite <- sepconj_emp at 1. apply triple_frame. apply triple_alloc.
-  intros b; simpl. rewrite lift_simple_conj, ! sepconj_assoc, sepconj_emp.
+  intros b; simpl. rewrite lift_pureconj, ! sepconj_assoc, sepconj_emp.
   apply triple_lift_pure; intros H1.
   eapply triple_let. apply triple_frame. apply triple_set. simpl; intros _.
-  eapply triple_let. rewrite sepconj_comm, sepconj_assoc.
+  eapply triple_let. rewrite sepconj_pick2. 
   apply triple_frame. apply triple_set. simpl; intros _.
-  rewrite sepconj_comm, sepconj_assoc, sepconj_comm, sepconj_assoc.
+  rewrite sepconj_pick2. 
   apply triple_pure. intros h A. split. auto. exists a; auto.
 Qed.   
 
@@ -551,14 +551,12 @@ Local Opaque Z.of_nat.
   apply triple_lift_exists; intros a'.
   apply triple_ifthen; auto.
   eapply triple_let.
-  rewrite sepconj_comm, sepconj_assoc. 
-  apply triple_frame. apply triple_get. simpl.
-  intros a''. rewrite lift_simple_conj. apply triple_lift_pure; intros H3. subst a''.
-  rewrite sepconj_comm, sepconj_assoc.
+  rewrite sepconj_pick2. apply triple_frame. apply triple_get. simpl.
+  intros a''. rewrite lift_pureconj. apply triple_lift_pure; intros H3. subst a''.
+  rewrite sepconj_swap3.
   eapply triple_consequence_post.
   apply triple_frame. apply IHt. intros len'; simpl.
-  rewrite lift_simple_conj.
-  rewrite sepconj_comm. rewrite sepconj_assoc. 
+  rewrite lift_pureconj. rewrite <- sepconj_swap3, sepconj_pick2.
   intros h1 (A & B). split. lia. split. auto. exists a'; auto.
 Qed.
 
@@ -596,35 +594,30 @@ Lemma list_concat_rec_correct: forall l2 a2 l1 a1,
     ⦃ fun _ => list_at a1 (l1 ++ l2) ⦄.
 Proof.
   induction l1 as [ | h1 t1]; intros; rewrite (unroll_com (list_concat_rec a1 a2)); simpl.
-- rewrite lift_simple_conj. apply triple_lift_pure; intros. lia.
-- rewrite lift_simple_conj. apply triple_lift_pure. intros H1.
+- rewrite lift_pureconj. apply triple_lift_pure; intros. lia.
+- rewrite lift_pureconj. apply triple_lift_pure. intros H1.
   rewrite lift_aexists. apply triple_lift_exists. intros a'.
   rewrite sepconj_assoc.
   eapply triple_let.
-  + rewrite sepconj_comm, ! sepconj_assoc. apply triple_frame. apply triple_get.
+  + rewrite sepconj_assoc, sepconj_pick2. apply triple_frame. apply triple_get.
   + intros t. simpl. 
-    rewrite lift_simple_conj. apply triple_lift_pure. intros H2; subst t.
+    rewrite lift_pureconj. apply triple_lift_pure. intros H2; subst t.
     apply triple_ifthenelse.
-    * apply triple_lift_pure. intros H2. 
-      rewrite sepconj_comm, ! sepconj_assoc. rewrite <- sepconj_assoc. 
+    * apply triple_lift_pure. intros H2.
+      rewrite <- sepconj_assoc, sepconj_comm.
       eapply triple_consequence_post. apply triple_frame. apply IHt1. auto.
-      simpl. intros _. rewrite sepconj_comm, sepconj_assoc.
+      simpl. intros _. rewrite sepconj_pick2, sepconj_swap3.
       intros h P. split; auto. exists a'; auto.
     * apply triple_lift_pure. intros H2.
       eapply triple_consequence_post.
       apply triple_frame.
       eapply triple_consequence_pre. apply triple_set.
       intros h P; exists a'; auto.
-      simpl. intros _.
-      rewrite <- sepconj_assoc. rewrite <- (sepconj_comm (list_at a' t1)). rewrite sepconj_assoc.
+      simpl. intros _. rewrite sepconj_pick2, sepconj_pick3.
       destruct t1; simpl.
-      ** rewrite lift_simple_conj, sepconj_emp.
-         rewrite <- (sepconj_comm (contains a1 h1)).
-         rewrite <- sepconj_assoc.
-         rewrite <- (sepconj_comm (contains a1 h1)).
-         rewrite sepconj_assoc.
+      ** rewrite lift_pureconj, sepconj_emp.
          intros h (A & B). split; auto. exists a2; auto.
-      ** rewrite lift_simple_conj. intros h (A & B). lia.
+      ** rewrite lift_pureconj. intros h (A & B). lia.
 Qed.
 
 Lemma list_concat_correct: forall l1 a1 l2 a2,
@@ -638,8 +631,8 @@ Proof.
   simpl. intros _. apply triple_pure. red; auto.
 - apply triple_lift_pure; intros H1.
   destruct l1; simpl.
-  + apply triple_pure. rewrite lift_simple_conj, sepconj_emp. intros h (A & B); auto.
-  + rewrite lift_simple_conj. apply triple_lift_pure. intros; lia.
+  + apply triple_pure. rewrite lift_pureconj, sepconj_emp. intros h (A & B); auto.
+  + rewrite lift_pureconj. apply triple_lift_pure. intros; lia.
 Qed.
 
 (** ** List reversal in place *)
@@ -672,23 +665,21 @@ Lemma list_rev_rec_correct: forall l a l' p,
     ⦃ fun x => list_at x (List.rev_append l l') ⦄.
 Proof.
   induction l as [ | hd l]; intros; rewrite (unroll_com (list_rev_rec a p)); simpl.
-- rewrite lift_simple_conj, sepconj_emp. apply triple_lift_pure; intros H1.
+- rewrite lift_pureconj, sepconj_emp. apply triple_lift_pure; intros H1.
   apply triple_ifelse; auto. apply triple_pure. red; auto.
-- rewrite lift_simple_conj; apply triple_lift_pure; intros H1.
+- rewrite lift_pureconj; apply triple_lift_pure; intros H1.
   rewrite lift_aexists; apply triple_lift_exists; intros a'.
   apply triple_ifthen; auto.
   eapply triple_let.
-  rewrite ! sepconj_assoc, <- sepconj_assoc, (sepconj_comm (contains a hd)), sepconj_assoc.
+  rewrite ! sepconj_assoc, sepconj_pick2. 
   apply triple_frame. apply triple_get. intros a''. simpl.
-  rewrite lift_simple_conj. apply triple_lift_pure. intros H3. subst a''.
+  rewrite lift_pureconj. apply triple_lift_pure. intros H3. subst a''.
   eapply triple_let.
   apply triple_frame. eapply triple_consequence_pre. 
   apply triple_set. 
   intros h P; exists a'; auto.
   simpl. intros _.
-  rewrite <- sepconj_assoc. rewrite (sepconj_comm (contains (a + 1) p)).
-  rewrite (sepconj_comm (list_at a' l)). rewrite <- sepconj_assoc. 
-  rewrite sepconj_comm. rewrite sepconj_assoc. 
+  rewrite sepconj_pick2, sepconj_pick3.
   eapply triple_consequence_pre.
   apply IHl.
   simpl. apply sepconj_imp_r. intros h A. split; auto. exists p; auto.
@@ -701,6 +692,6 @@ Lemma list_rev_correct: forall a l,
 Proof.
   intros. rewrite List.rev_alt.
   eapply triple_consequence_pre. apply list_rev_rec_correct. 
-  simpl. rewrite sepconj_comm, lift_simple_conj, sepconj_emp.
+  simpl. rewrite sepconj_comm, lift_pureconj, sepconj_emp.
   intros h A; split; auto.
 Qed.
