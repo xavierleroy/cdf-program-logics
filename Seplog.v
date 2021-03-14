@@ -1,6 +1,6 @@
 (** Separation logic. *)
 
-From Coq Require Import ZArith Lia Bool List.
+From Coq Require Import ZArith Lia Bool List Program.Equality.
 From Coq Require Import FunctionalExtensionality PropExtensionality.
 From CDF Require Import Sequences Separation.
 
@@ -134,94 +134,139 @@ Inductive safe: com -> heap -> postcond -> Prop :=
       (forall c' h', red (c, h) (c', h') -> safe c' h' Q) ->
       safe c h Q.
 
-(** We could try to define semantic triples like we did for Hoare logic:
-<<
-    Definition triple (P: precond) (c: com) (Q: postcond) :=
-     forall h, P h -> safe c h Q.
->>
-    However, this definition does not validate the frame rule.
-    There are reductions, namely [ALLOC sz / h --> PURE l / h'],
-    that we can do from a "small" heap [h] but can no longer do from a
-    larger heap [hunion h hf] obtained by framing.
-    (This happens if the location [l] is fresh in [h] but not in [hf].). *)
-
-(** Instead, we define our separation triples [ ⦃ P ⦄ c ⦃ Q ⦄ ]
-    as Hoare triples plus framing: *)
-
-Definition Hoare (P: precond) (c: com) (Q: postcond) : Prop :=
-  forall h, P h -> safe c h Q.
+(** We define semantic triples like we did for Hoare logic: *)
 
 Definition triple (P: precond) (c: com) (Q: postcond) :=
-  forall (R: assertion), Hoare (P ** R) c (fun v => Q v ** R).
+  forall h, P h -> safe c h Q.
 
 Notation "⦃ P ⦄ c ⦃ Q ⦄" := (triple P c Q) (at level 90, c at next level).
 
-(** This definition validates the frame rule. *)
+(** ** 2.2. The frame rule *)
+
+(** The frame rule is valid because the operational semantics has nice
+    properties with respect to heap extension: if a command is safe
+    in a small heap, it is safe in a bigger heap, and any reduction
+    from the bigger heap is simulated by a reduction from the smaller heap. *)
+
+Ltac inv H := inversion H; clear H; subst.
+
+Lemma immsafe_frame: forall h' c h,
+  immsafe (c, h) -> hdisjoint h h' -> immsafe (c, hunion h h').
+Proof.
+  intros h' c h IMM; dependent induction IMM; intros DISJ.
+- constructor.
+- constructor; auto.
+- constructor.
+- destruct (isfinite (hunion h h')) as [l' FIN].
+  apply immsafe_alloc with (Z.max 1 l').
+  lia.
+  intros. apply FIN. lia.
+- constructor. cbn. destruct (h l); congruence. 
+- constructor. cbn. destruct (h l); congruence. 
+- constructor. cbn. destruct (h l); congruence. 
+- constructor.
+Qed.
+
+Lemma red_frame: forall h2 c h1 c' h',
+  red (c, hunion h1 h2) (c', h') ->
+  immsafe (c, h1) ->
+  hdisjoint h1 h2 ->
+  exists h1', red (c, h1) (c', h1') /\ hdisjoint h1' h2 /\ h' = hunion h1' h2.
+Proof.
+  intros until h'; intros RED; dependent induction RED; intros IMM DISJ; inv IMM.
+- exists h1; intuition auto. constructor; auto.
+- exists h1; intuition auto. constructor; auto.
+- edestruct IHRED as (h1' & R & D & U); eauto.
+  exists h1'; intuition auto. constructor; auto.
+- exists h1; intuition auto. constructor; auto.
+- exists (hinit l sz h1); intuition auto.
+  + constructor; auto. intros. apply H in H1. cbn in H1. destruct (h1 i); congruence.
+  + red; cbn; intros i.
+    assert (EITHER: l <= i < l + Z.of_nat sz \/ (i < l \/ l + Z.of_nat sz <= i)) by lia.
+    destruct EITHER.
+    * right. apply H in H1. cbn in H1. destruct (h1 i), (h2 i); congruence.
+    * rewrite hinit_outside by auto. apply DISJ.
+  + apply heap_extensionality; intros i; cbn.
+    assert (EITHER: l <= i < l + Z.of_nat sz \/ (i < l \/ l + Z.of_nat sz <= i)) by lia.
+    destruct EITHER.
+    * rewrite ! hinit_inside by auto. auto.
+    * rewrite ! hinit_outside by auto. auto.
+- exists h1; intuition auto. constructor; auto. cbn in H. destruct (h1 l); congruence.
+- exists (hupdate l v h1); intuition auto.
+  + constructor; auto.
+  + intros i; cbn. generalize (DISJ i). 
+    destruct (Z.eq_dec l i); intuition congruence.
+  + apply heap_extensionality; intros i; cbn.
+    destruct (Z.eq_dec l i); auto.
+- exists (hfree l h1); intuition auto.
+  + constructor; auto.
+  + intros i; cbn. generalize (DISJ i). 
+    destruct (Z.eq_dec l i); intuition congruence.
+  + apply heap_extensionality; intros i; cbn.
+    destruct (Z.eq_dec l i); auto.
+    subst i. generalize (DISJ l). intuition.
+Qed.
+
+Lemma safe_frame:
+  forall (R: assertion) h', R h' ->
+  forall c h Q,
+  safe c h Q -> hdisjoint h h' -> safe c (hunion h h') (fun v => Q v ** R).
+Proof.
+  induction 2; intros DISJ.
+- constructor. exists h, h'; auto.
+- constructor. auto. apply immsafe_frame; auto. 
+  intros. edestruct red_frame as (h1' & RED1 & D & U); eauto. subst h'0.
+  apply H3; auto.
+Qed.
 
 Lemma triple_frame: forall P c Q R,
   ⦃ P ⦄ c ⦃ Q ⦄ ->
   ⦃ P ** R ⦄ c ⦃ fun v => Q v ** R ⦄.
 Proof.
-  intros P c Q R TR R'. rewrite sepconj_assoc.
-  replace (fun v => (Q v ** R) ** R') with (fun v => Q v ** (R ** R')).
-  apply TR.
-  apply functional_extensionality; intros. rewrite sepconj_assoc; auto.
+  intros P c Q R TR h (h1 & h2 & P1 & R2 & D & U). subst h.
+  apply safe_frame; auto.
 Qed.
 
-Ltac inv H := inversion H; clear H; subst.
-
-(** ** 2.2. The "small rules" for heap operations *)
+(** ** 2.3. The "small rules" for heap operations *)
 
 Lemma triple_get: forall l v,
   ⦃ contains l v ⦄ GET l ⦃ fun v' => (v' = v) //\\ contains l v ⦄.
 Proof.
-  intros l v R h (h1 & h2 & H1 & H2 & D & U).
-  assert (L1: h1 l = Some v).
-  { red in H1. subst h1. apply hupdate_same. }
+  intros l v h P.
   assert (L: h l = Some v).
-  { intros. rewrite U; simpl. rewrite L1; auto. } 
+  { red in P. subst h. apply hupdate_same. }
   constructor; auto.
   - constructor. congruence.
-  - intros c' h' RED. inv RED. constructor. 
-    exists h1, h2. unfold pureconj. intuition congruence.
+  - intros c' h' RED. inv RED. constructor. split; auto; congruence.
 Qed.
 
 Lemma triple_set: forall l v,
   ⦃ valid l ⦄ SET l v ⦃ fun _ => contains l v ⦄.
 Proof.
-  intros l v R h (h1 & h2 & H1 & H2 & D & U).
-  destruct H1 as (v0 & H1). red in H1.
-  assert (L1: h1 l = Some v0).
-  { subst h1; apply hupdate_same. }
+  intros l v h (v0 & P).
   assert (L: h l = Some v0).
-  { rewrite U; cbn. rewrite L1; auto. } 
+  { red in P; subst h; apply hupdate_same. }
   constructor; auto.
   - constructor. congruence.
-  - intros c' h' RED. inv RED. constructor. 
-    exists (hupdate l v hempty), h2.
-    split. red. auto.
-    split. auto.
-    split. intro l'. specialize (D l'). cbn in *. destruct D; auto. destruct (Z.eq_dec l l'); auto. congruence.
-    apply heap_extensionality; intros l'; cbn. destruct (Z.eq_dec l l'); auto.
+  - intros c' h' RED. inv RED. constructor.
+    red in P; subst h.
+    red. apply heap_extensionality; intros l'; cbn.
+    destruct (Z.eq_dec l l'); auto.
 Qed.
 
 Fixpoint valid_N (l: addr) (sz: nat) : assertion :=
   match sz with O => emp | S sz => valid l ** valid_N (l + 1) sz end.
 
-Remark valid_N_init:
-  forall (R: assertion) sz l h,
-  R h ->
-  (forall i, l <= i < l + Z.of_nat sz -> h i = None) ->
-  (valid_N l sz ** R) (hinit l sz h).
+Remark valid_N_init: forall sz l,
+  (valid_N l sz) (hinit l sz hempty).
 Proof.
-  induction sz as [ | sz]; intros l h Rh EMPTY; cbn.
-- rewrite sepconj_emp. auto.
-- rewrite sepconj_assoc. exists (hupdate l 0 hempty), (hinit (l + 1) sz h).
-  split. exists 0. red; auto.
-  split. apply IHsz. auto. intros. apply EMPTY. lia.
-  split. intros x. unfold hupdate, hempty; cbn. destruct (Z.eq_dec l x); auto.
-  right. rewrite hinit_outside by lia. apply EMPTY; lia.
-  apply heap_extensionality; intros x. cbn. destruct (Z.eq_dec l x); auto.
+  induction sz as [ | sz]; intros l; cbn.
+- red; auto.
+- exists (hupdate l 0 hempty), (hinit (l + 1) sz hempty); intuition auto.
+  + exists 0. red; auto.
+  + intros x. unfold hupdate, hempty; cbn. destruct (Z.eq_dec l x); auto.
+  right. rewrite hinit_outside by lia. auto.
+  + apply heap_extensionality; intros x. cbn. destruct (Z.eq_dec l x); auto.
 Qed. 
 
 Lemma triple_alloc: forall sz,
@@ -229,13 +274,13 @@ Lemma triple_alloc: forall sz,
   ALLOC sz
   ⦃ fun l => (l <> 0) //\\ valid_N l sz ⦄.
 Proof.
-  intros sz R h H. rewrite sepconj_emp in H.
+  intros sz h P. red in P. subst h.
   constructor; auto.
-- destruct (isfinite h) as (l0 & FIN). apply immsafe_alloc with (Z.max l0 1); intros.
+- apply immsafe_alloc with 1; intros.
   + lia.
-  + apply FIN. lia.
+  + auto.
 - intros c' h' RED; inv RED. constructor.
-  rewrite lift_pureconj; split. auto. apply valid_N_init; auto.
+  split; auto. apply valid_N_init; auto.
 Qed. 
 
 Lemma triple_free: forall l,
@@ -243,21 +288,17 @@ Lemma triple_free: forall l,
   FREE l
   ⦃ fun _ => emp ⦄.
 Proof.
-  intros l R h (h1 & h2 & H1 & H2 & D & U).
-  destruct H1 as (v0 & H1).
-  assert (L1: h1 l = Some v0).
-  { rewrite H1. apply hupdate_same. }
+  intros l h (v0 & P). red in P.
   assert (L: h l = Some v0).
-  { rewrite U; cbn. rewrite L1. auto. } 
+  { subst h. apply hupdate_same. }
   constructor; auto.
 - constructor. congruence. 
-- intros c' h' RED; inv RED. constructor. rewrite sepconj_emp.
-  replace (hfree l (hunion h1 h2)) with h2; auto.
-  apply heap_extensionality; intros x. generalize (D x); rewrite H1; cbn.
-  destruct (Z.eq_dec l x); auto. intuition congruence.
+- intros c' h' RED; inv RED. constructor.
+  red. apply heap_extensionality; intros x. cbn.
+  destruct (Z.eq_dec l x); auto.
 Qed.
 
-(** ** 2.3. Properties of the [safe] predicate *)
+(** ** 2.4. Properties of the [safe] predicate *)
 
 Lemma safe_pure: forall v h Q,
   safe (PURE v) h Q -> Q v h.
@@ -307,33 +348,13 @@ Proof.
 - apply safe_step; auto.
 Qed.
 
-(** ** 2.4. Rules for control structures *)
-
-(** Proof plan: first show Hoare-style rules for the [Hoare] triple,
-    then frame by an arbitrary [R] to obtain the separation triple. *)
-
-Lemma Hoare_pure: forall P v (Q: postcond),
-  P -->> Q v ->
-  Hoare P (PURE v) Q.
-Proof.
-  intros; intros h Ph. constructor. apply H; auto.
-Qed.
+(** ** 2.5. Rules for control structures *)
 
 Lemma triple_pure: forall P v (Q: postcond),
   P -->> Q v ->
   ⦃ P ⦄ PURE v ⦃ Q ⦄.
 Proof.
-  intros; intros R. apply Hoare_pure. apply sepconj_imp_l; auto.
-Qed.
-
-Lemma Hoare_let:
-  forall c f (P: precond) (Q R: postcond),
-  Hoare P c Q ->
-  (forall v, Hoare (Q v) (f v) R) ->
-  Hoare P (LET c f) R.
-Proof.
-  intros until R; intros HR1 HR2 h Ph.
-  apply safe_let with Q. apply HR2. apply HR1. auto.
+  intros; intros h Ph. constructor. apply H; auto.
 Qed.
 
 Lemma triple_let:
@@ -342,16 +363,14 @@ Lemma triple_let:
   (forall v, ⦃ Q v ⦄ f v ⦃ R ⦄) ->
   ⦃ P ⦄ LET c f ⦃ R ⦄.
 Proof.
-  intros c f P Q R TR1 TR2 R'.
-  apply Hoare_let with (fun v => Q v ** R').
-  apply TR1.
-  intros. apply TR2.
+  intros until R; intros HR1 HR2 h Ph.
+  apply safe_let with Q. apply HR2. apply HR1. auto.
 Qed.
 
-Lemma Hoare_ifthenelse: forall b c1 c2 P Q,
-  Hoare ((b <> 0) //\\ P) c1 Q ->
-  Hoare ((b = 0) //\\ P) c2 Q ->
-  Hoare P (IFTHENELSE b c1 c2) Q.
+Lemma triple_ifthenelse: forall b c1 c2 P Q,
+  ⦃ (b <> 0) //\\ P ⦄ c1 ⦃ Q ⦄ ->
+  ⦃ (b = 0) //\\ P ⦄ c2 ⦃ Q ⦄ ->
+  ⦃ P ⦄ IFTHENELSE b c1 c2 ⦃ Q ⦄.
 Proof.
   intros until Q; intros HR1 HR2 h Ph. constructor; auto.
 - constructor.
@@ -360,53 +379,25 @@ Proof.
   + apply HR1. split; auto.
 Qed.
 
-Lemma triple_ifthenelse: forall b c1 c2 P Q,
-  ⦃ (b <> 0) //\\ P ⦄ c1 ⦃ Q ⦄ ->
-  ⦃ (b = 0) //\\ P ⦄ c2 ⦃ Q ⦄ ->
-  ⦃ P ⦄ IFTHENELSE b c1 c2 ⦃ Q ⦄.
-Proof.
-  intros b c1 c2 P Q TR1 TR2 R.
-  apply Hoare_ifthenelse; rewrite <- lift_pureconj; auto.
-Qed.
-
-Lemma Hoare_consequence: forall P P' c Q' Q,
-  Hoare P' c Q' ->
-  P -->> P' -> (forall v, Q' v -->> Q v) ->
-  Hoare P c Q.
-Proof.
-  intros; red; intros. apply safe_consequence with Q'; auto. 
-Qed.
-
 Lemma triple_consequence: forall P P' c Q' Q,
   ⦃ P' ⦄ c ⦃ Q' ⦄ ->
   P -->> P' -> (forall v, Q' v -->> Q v) ->
   ⦃ P ⦄ c ⦃ Q ⦄.
 Proof.
-  intros; red; intros. apply Hoare_consequence with (P' ** R) (fun v => Q' v ** R).
-  apply H.
-  apply sepconj_imp_l; auto.
-  intros; apply sepconj_imp_l; auto.
+  intros; red; intros. apply safe_consequence with Q'; auto. 
 Qed.
-
-Lemma Hoare_pick: forall P n,
-  Hoare P (PICK n) (fun i => (0 <= i < n) //\\ P).
-Proof.
-  intros P n h Ph. constructor; auto.
-- constructor.
-- intros c' h' RED; inv RED. constructor. split; auto.
-Qed. 
 
 Lemma triple_pick: forall n,
   ⦃ emp ⦄
   PICK n
   ⦃ fun i => pure (0 <= i < n) ⦄.
 Proof.
-  intros; intros R. rewrite sepconj_emp. eapply Hoare_consequence with (P' := R). apply Hoare_pick.
-  red; auto.
-  intros; red; intros. rewrite pureconj_sepconj. auto.
+  intros n h Ph. constructor; auto.
+- constructor.
+- intros c' h' RED; inv RED. constructor. split; auto.
 Qed.
 
-(** ** 2.5.  Useful derived rules *)
+(** ** 2.6.  Useful derived rules *)
 
 (** The following rules are heavily used in the examples of section 3. *)
 
@@ -430,16 +421,14 @@ Lemma triple_lift_pure: forall (P: Prop) P' c Q,
   (P -> ⦃ P' ⦄ c ⦃ Q ⦄) ->
   ⦃ P //\\ P' ⦄ c ⦃ Q ⦄.
 Proof.
-  intros. intros R h Ph. rewrite lift_pureconj in Ph. destruct Ph as [P1 P2].
-  apply H; auto.
+  intros. intros h [P1 P2]. apply H; auto.
 Qed.
 
 Lemma triple_lift_exists: forall (X: Type) (P: X -> assertion) c Q,
   (forall x, ⦃ P x ⦄ c ⦃ Q ⦄) ->
   ⦃ aexists P ⦄ c ⦃ Q ⦄.
 Proof.
-  intros. intros R h (h1 & h2 & (x & Px1) & R2 & D & U).
-  apply (H x R). exists h1, h2; intuition auto.
+  intros. intros h (x & Px). apply (H x); auto.
 Qed.
 
 Lemma triple_ifthen: forall b c1 c2 P Q,
@@ -696,7 +685,223 @@ Proof.
   intros h A; split; auto.
 Qed.
 
-(** * 4. Ramification *)
+(** * 4. An alternate definition of separation logic triples *)
+
+Module AlternateSeplog.
+
+(** For some languages, the frame property for reductions (lemma
+    [red_frame] above) does not hold, e.g. because allocations are
+    deterministic.  Or maybe we do not want to prove the [red_frame]
+    lemma.
+
+    In this case, not all is lost: we can define our separation
+    triples [ ⦃ P ⦄ c ⦃ Q ⦄ ] as Hoare triples plus framing. *)
+
+Definition Hoare (P: precond) (c: com) (Q: postcond) : Prop :=
+  forall h, P h -> safe c h Q.
+
+Definition triple (P: precond) (c: com) (Q: postcond) :=
+  forall (R: assertion), Hoare (P ** R) c (fun v => Q v ** R).
+
+Notation "⦃ P ⦄ c ⦃ Q ⦄" := (triple P c Q) (at level 90, c at next level).
+
+(** This definition validates the frame rule. *)
+
+Lemma triple_frame: forall P c Q R,
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
+  ⦃ P ** R ⦄ c ⦃ fun v => Q v ** R ⦄.
+Proof.
+  intros P c Q R TR R'. rewrite sepconj_assoc.
+  replace (fun v => (Q v ** R) ** R') with (fun v => Q v ** (R ** R')).
+  apply TR.
+  apply functional_extensionality; intros. rewrite sepconj_assoc; auto.
+Qed.
+
+(** It also validates the "small rules" for heap operations. *)
+
+Lemma triple_get: forall l v,
+  ⦃ contains l v ⦄ GET l ⦃ fun v' => (v' = v) //\\ contains l v ⦄.
+Proof.
+  intros l v R h (h1 & h2 & H1 & H2 & D & U).
+  assert (L1: h1 l = Some v).
+  { red in H1. subst h1. apply hupdate_same. }
+  assert (L: h l = Some v).
+  { intros. rewrite U; simpl. rewrite L1; auto. } 
+  constructor; auto.
+  - constructor. congruence.
+  - intros c' h' RED. inv RED. constructor. 
+    exists h1, h2. unfold pureconj. intuition congruence.
+Qed.
+
+Lemma triple_set: forall l v,
+  ⦃ valid l ⦄ SET l v ⦃ fun _ => contains l v ⦄.
+Proof.
+  intros l v R h (h1 & h2 & H1 & H2 & D & U).
+  destruct H1 as (v0 & H1). red in H1.
+  assert (L1: h1 l = Some v0).
+  { subst h1; apply hupdate_same. }
+  assert (L: h l = Some v0).
+  { rewrite U; cbn. rewrite L1; auto. } 
+  constructor; auto.
+  - constructor. congruence.
+  - intros c' h' RED. inv RED. constructor. 
+    exists (hupdate l v hempty), h2.
+    split. red. auto.
+    split. auto.
+    split. intro l'. specialize (D l'). cbn in *. destruct D; auto. destruct (Z.eq_dec l l'); auto. congruence.
+    apply heap_extensionality; intros l'; cbn. destruct (Z.eq_dec l l'); auto.
+Qed.
+
+Remark valid_N_init:
+  forall (R: assertion) sz l h,
+  R h ->
+  (forall i, l <= i < l + Z.of_nat sz -> h i = None) ->
+  (valid_N l sz ** R) (hinit l sz h).
+Proof.
+  induction sz as [ | sz]; intros l h Rh EMPTY; cbn.
+- rewrite sepconj_emp. auto.
+- rewrite sepconj_assoc. exists (hupdate l 0 hempty), (hinit (l + 1) sz h).
+  split. exists 0. red; auto.
+  split. apply IHsz. auto. intros. apply EMPTY. lia.
+  split. intros x. unfold hupdate, hempty; cbn. destruct (Z.eq_dec l x); auto.
+  right. rewrite hinit_outside by lia. apply EMPTY; lia.
+  apply heap_extensionality; intros x. cbn. destruct (Z.eq_dec l x); auto.
+Qed. 
+
+Lemma triple_alloc: forall sz,
+  ⦃ emp ⦄
+  ALLOC sz
+  ⦃ fun l => (l <> 0) //\\ valid_N l sz ⦄.
+Proof.
+  intros sz R h H. rewrite sepconj_emp in H.
+  constructor; auto.
+- destruct (isfinite h) as (l0 & FIN). apply immsafe_alloc with (Z.max l0 1); intros.
+  + lia.
+  + apply FIN. lia.
+- intros c' h' RED; inv RED. constructor.
+  rewrite lift_pureconj; split. auto. apply valid_N_init; auto.
+Qed. 
+
+Lemma triple_free: forall l,
+  ⦃ valid l ⦄
+  FREE l
+  ⦃ fun _ => emp ⦄.
+Proof.
+  intros l R h (h1 & h2 & H1 & H2 & D & U).
+  destruct H1 as (v0 & H1).
+  assert (L1: h1 l = Some v0).
+  { rewrite H1. apply hupdate_same. }
+  assert (L: h l = Some v0).
+  { rewrite U; cbn. rewrite L1. auto. } 
+  constructor; auto.
+- constructor. congruence. 
+- intros c' h' RED; inv RED. constructor. rewrite sepconj_emp.
+  replace (hfree l (hunion h1 h2)) with h2; auto.
+  apply heap_extensionality; intros x. generalize (D x); rewrite H1; cbn.
+  destruct (Z.eq_dec l x); auto. intuition congruence.
+Qed.
+
+(** The rules for control structures are also valid.  
+    Proof plan: first show Hoare-style rules for the [Hoare] triple,
+    then frame by an arbitrary [R] to obtain the separation triple. *)
+
+Lemma Hoare_pure: forall P v (Q: postcond),
+  P -->> Q v ->
+  Hoare P (PURE v) Q.
+Proof.
+  intros; intros h Ph. constructor. apply H; auto.
+Qed.
+
+Lemma triple_pure: forall P v (Q: postcond),
+  P -->> Q v ->
+  ⦃ P ⦄ PURE v ⦃ Q ⦄.
+Proof.
+  intros; intros R. apply Hoare_pure. apply sepconj_imp_l; auto.
+Qed.
+
+Lemma Hoare_let:
+  forall c f (P: precond) (Q R: postcond),
+  Hoare P c Q ->
+  (forall v, Hoare (Q v) (f v) R) ->
+  Hoare P (LET c f) R.
+Proof.
+  intros until R; intros HR1 HR2 h Ph.
+  apply safe_let with Q. apply HR2. apply HR1. auto.
+Qed.
+
+Lemma triple_let:
+  forall c f (P: precond) (Q R: postcond),
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
+  (forall v, ⦃ Q v ⦄ f v ⦃ R ⦄) ->
+  ⦃ P ⦄ LET c f ⦃ R ⦄.
+Proof.
+  intros c f P Q R TR1 TR2 R'.
+  apply Hoare_let with (fun v => Q v ** R').
+  apply TR1.
+  intros. apply TR2.
+Qed.
+
+Lemma Hoare_ifthenelse: forall b c1 c2 P Q,
+  Hoare ((b <> 0) //\\ P) c1 Q ->
+  Hoare ((b = 0) //\\ P) c2 Q ->
+  Hoare P (IFTHENELSE b c1 c2) Q.
+Proof.
+  intros until Q; intros HR1 HR2 h Ph. constructor; auto.
+- constructor.
+- intros c' h' RED; inv RED. destruct (Z.eqb_spec b 0).
+  + apply HR2. split; auto.
+  + apply HR1. split; auto.
+Qed.
+
+Lemma triple_ifthenelse: forall b c1 c2 P Q,
+  ⦃ (b <> 0) //\\ P ⦄ c1 ⦃ Q ⦄ ->
+  ⦃ (b = 0) //\\ P ⦄ c2 ⦃ Q ⦄ ->
+  ⦃ P ⦄ IFTHENELSE b c1 c2 ⦃ Q ⦄.
+Proof.
+  intros b c1 c2 P Q TR1 TR2 R.
+  apply Hoare_ifthenelse; rewrite <- lift_pureconj; auto.
+Qed.
+
+Lemma Hoare_consequence: forall P P' c Q' Q,
+  Hoare P' c Q' ->
+  P -->> P' -> (forall v, Q' v -->> Q v) ->
+  Hoare P c Q.
+Proof.
+  intros; red; intros. apply safe_consequence with Q'; auto. 
+Qed.
+
+Lemma triple_consequence: forall P P' c Q' Q,
+  ⦃ P' ⦄ c ⦃ Q' ⦄ ->
+  P -->> P' -> (forall v, Q' v -->> Q v) ->
+  ⦃ P ⦄ c ⦃ Q ⦄.
+Proof.
+  intros; red; intros. apply Hoare_consequence with (P' ** R) (fun v => Q' v ** R).
+  apply H.
+  apply sepconj_imp_l; auto.
+  intros; apply sepconj_imp_l; auto.
+Qed.
+
+Lemma Hoare_pick: forall P n,
+  Hoare P (PICK n) (fun i => (0 <= i < n) //\\ P).
+Proof.
+  intros P n h Ph. constructor; auto.
+- constructor.
+- intros c' h' RED; inv RED. constructor. split; auto.
+Qed. 
+
+Lemma triple_pick: forall n,
+  ⦃ emp ⦄
+  PICK n
+  ⦃ fun i => pure (0 <= i < n) ⦄.
+Proof.
+  intros; intros R. rewrite sepconj_emp. eapply Hoare_consequence with (P' := R). apply Hoare_pick.
+  red; auto.
+  intros; red; intros. rewrite pureconj_sepconj. auto.
+Qed.
+
+End AlternateSeplog.
+
+(** * 5. Ramification *)
 
 (** Assume we have a triple [{P'} c {Q'}] and we want to conclude [{P} c {Q}].
     In general, we need to frame the former triple by an appropriate [R],
@@ -727,9 +932,9 @@ Proof.
   apply (wand_cancel (Q v)). exists h1, h2; auto.
 Qed.
 
-(** * 5. Weakest preconditions *)
+(** * 6. Weakest preconditions *)
 
-(** ** 5.1.  Definition and characterization *)
+(** ** 6.1.  Definition and characterization *)
 
 (** Here is one possible definition of the weakest precondition for
     command [c] with postcondition [Q]. *)
@@ -742,8 +947,7 @@ Definition wp (c: com) (Q: postcond) : precond :=
 Lemma wp_precond: forall c Q,
   ⦃ wp c Q ⦄ c ⦃ Q ⦄.
 Proof.
-  intros c Q R h (h1 & h2 & A & B & D & U). destruct A as (P & T & C).
-  apply T. exists h1, h2; auto.
+  intros c Q h (P & T & C). apply T. auto.
 Qed.
 
 (** ... and it is implied by any other precondition. *)
@@ -770,23 +974,22 @@ Qed.
     operational semantics directly. *)
 
 Definition wp' (c: com) (Q: postcond) : precond :=
-  fun h => forall (R: assertion) h',
-           hdisjoint h h' -> R h' -> safe c (hunion h h') (fun v => Q v ** R).
+  fun h => safe c h Q.
 
 Lemma wp'_precond: forall c Q,
   ⦃ wp' c Q ⦄ c ⦃ Q ⦄.
 Proof.
-  intros c Q R h (h1 & h2 & A & B & D & U). subst h. apply A; auto.
+  intros c Q h SAFE. apply SAFE.
 Qed.
 
 Lemma wp'_weakest: forall P c Q,
   ⦃ P ⦄ c ⦃ Q ⦄ ->
   P -->> wp' c Q.
 Proof.
-  intros; intros h Ph R h' D Rh'. apply H. exists h, h'; auto.
+  intros; intros h Ph. apply H. auto.
 Qed.
 
-(** ** 5.2. Structural rules for weakest preconditions *)
+(** ** 6.2. Structural rules for weakest preconditions *)
 
 Lemma wp_consequence: forall (Q Q': postcond) c,
   (forall v, Q v -->> Q' v) ->
@@ -816,7 +1019,7 @@ Proof.
   intros v h (h1 & h2 & A & B & D & U). apply (wand_cancel (Q v)). exists h1, h2; auto.
 Qed.
 
-(** ** 5.3.  Weakest precondition rules for our language of pointers *)
+(** ** 6.3.  Weakest precondition rules for our language of pointers *)
 
 Lemma wp_pure: forall (Q: postcond) v,
   Q v -->> wp (PURE v) Q.

@@ -10,4 +10,8 @@ An HTML pretty-printing of the commented sources is also available:
    * Module [Hoare](https://xavierleroy.org/cdf-program-logics/CDF.Hoare.html): Hoare logics for the imperative language IMP.
    * Library [Sequences](https://xavierleroy.org/cdf-program-logics/CDF.Sequences.html): definitions and properties of reduction sequences.
 
+2. Pointers and data structures: separation logic
+   * Module [Seplog](https://xavierleroy.org/cdf-program-logics/CDF.Seplog.html): separation logic for the functional/imperative language PTR.
+   * Library [Separation](https://xavierleroy.org/cdf-program-logics/CDF.Separation.html): definitions and properties of heaps and separation logic assertions.
+
 
