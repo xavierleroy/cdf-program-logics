@@ -695,3 +695,225 @@ Proof.
   simpl. rewrite sepconj_comm, lift_pureconj, sepconj_emp.
   intros h A; split; auto.
 Qed.
+
+(** * 4. Ramification *)
+
+(** Assume we have a triple [{P'} c {Q'}] and we want to conclude [{P} c {Q}].
+    In general, we need to frame the former triple by an appropriate [R],
+    then use the consequence rule to conclude. *)
+
+Lemma triple_frame_consequence: forall R P c Q P' Q',
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
+  P' -->> P ** R ->
+  (forall v, Q v ** R -->> Q' v) ->
+  ⦃ P' ⦄ c ⦃ Q' ⦄.
+Proof.
+  intros. apply triple_consequence with (P ** R) (fun v => Q v ** R); auto. apply triple_frame; auto.
+Qed.
+
+(** This rule still needs the user to guess the framing predicate [R].
+    An alternate presentation uses the magic wand instead.
+    This approach is called "ramification" in the literature. *)
+
+Lemma triple_ramification: forall P c Q P' Q',
+ ⦃ P ⦄ c ⦃ Q ⦄ ->
+  P' -->> P ** (aforall (fun v => Q v --* Q' v)) ->
+  ⦃ P' ⦄ c ⦃ Q' ⦄.
+Proof.
+  intros. eapply triple_frame_consequence with (R := aforall (fun v => Q v --* Q' v)).
+  eassumption.
+  assumption.
+  intros v h (h1 & h2 & Q1 & W2 & D & U).
+  apply (wand_cancel (Q v)). exists h1, h2; auto.
+Qed.
+
+(** * 5. Weakest preconditions *)
+
+(** ** 5.1.  Definition and characterization *)
+
+(** Here is one possible definition of the weakest precondition for
+    command [c] with postcondition [Q]. *)
+
+Definition wp (c: com) (Q: postcond) : precond :=
+  aexists (fun P => ⦃ P ⦄ c ⦃ Q ⦄ //\\ P).
+
+(** What matters about [wp c Q] is that it is a precondition... *)
+
+Lemma wp_precond: forall c Q,
+  ⦃ wp c Q ⦄ c ⦃ Q ⦄.
+Proof.
+  intros c Q R h (h1 & h2 & A & B & D & U). destruct A as (P & T & C).
+  apply T. exists h1, h2; auto.
+Qed.
+
+(** ... and it is implied by any other precondition. *)
+
+Lemma wp_weakest: forall P c Q,
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
+  P -->> wp c Q.
+Proof.
+  intros P c Q T h Ph. exists P; split; auto.
+Qed.
+
+(** This leads to the following alternate definition of triples in terms
+    of weakest preconditions. *)
+
+Corollary wp_equiv: forall P c Q,
+  ⦃ P ⦄ c ⦃ Q ⦄ <-> (P -->> wp c Q).
+Proof.
+  intros; split; intros.
+- apply wp_weakest; auto.
+- apply triple_consequence_pre with (wp c Q); auto using wp_precond.
+Qed.
+
+(** Here is another definition of the weakest precondition, using the
+    operational semantics directly. *)
+
+Definition wp' (c: com) (Q: postcond) : precond :=
+  fun h => forall (R: assertion) h',
+           hdisjoint h h' -> R h' -> safe c (hunion h h') (fun v => Q v ** R).
+
+Lemma wp'_precond: forall c Q,
+  ⦃ wp' c Q ⦄ c ⦃ Q ⦄.
+Proof.
+  intros c Q R h (h1 & h2 & A & B & D & U). subst h. apply A; auto.
+Qed.
+
+Lemma wp'_weakest: forall P c Q,
+  ⦃ P ⦄ c ⦃ Q ⦄ ->
+  P -->> wp' c Q.
+Proof.
+  intros; intros h Ph R h' D Rh'. apply H. exists h, h'; auto.
+Qed.
+
+(** ** 5.2. Structural rules for weakest preconditions *)
+
+Lemma wp_consequence: forall (Q Q': postcond) c,
+  (forall v, Q v -->> Q' v) ->
+  wp c Q -->> wp c Q'.
+Proof.
+  intros. apply wp_weakest. apply triple_consequence_post with Q; auto using wp_precond.
+Qed.
+
+Lemma wp_frame: forall R c Q,
+  wp c Q ** R -->> wp c (fun v => Q v ** R).
+Proof.
+  intros. apply wp_weakest. apply triple_frame. apply wp_precond.
+Qed.
+
+Corollary wp_frame_consequence: forall R Q c Q',
+  (forall v, Q v ** R -->> Q' v) ->
+  wp c Q ** R -->> wp c Q'.
+Proof.
+  intros; red; intros. apply wp_consequence with (fun v => Q v ** R). assumption.
+  apply wp_frame; auto.
+Qed.
+
+Corollary wp_ramification: forall c Q Q',
+  wp c Q ** aforall (fun v => Q v --* Q' v) -->> wp c Q'.
+Proof.
+  intros. apply wp_frame_consequence.
+  intros v h (h1 & h2 & A & B & D & U). apply (wand_cancel (Q v)). exists h1, h2; auto.
+Qed.
+
+(** ** 5.3.  Weakest precondition rules for our language of pointers *)
+
+Lemma wp_pure: forall (Q: postcond) v,
+  Q v -->> wp (PURE v) Q.
+Proof.
+  intros. apply wp_weakest. apply triple_pure. red; auto.
+Qed.
+
+Lemma wp_let: forall c f Q,
+  wp c (fun v => wp (f v) Q) -->> wp (LET c f) Q.
+Proof.
+  intros. apply wp_weakest. eapply triple_let.
+  apply wp_precond.
+  intros. apply wp_precond.
+Qed.
+
+Lemma wp_ifthenelse: forall b c1 c2 Q,
+  (if b =? 0 then wp c2 Q else wp c1 Q) -->> wp (IFTHENELSE b c1 c2) Q.
+Proof.
+  intros. apply wp_weakest. apply triple_ifthenelse.
+- apply triple_consequence_pre with (wp c1 Q). apply wp_precond.
+  intros h (A & B). rewrite <- Z.eqb_neq in A. rewrite A in B. auto.
+- apply triple_consequence_pre with (wp c2 Q). apply wp_precond.
+  intros h (A & B). subst b. auto.
+Qed.
+
+Lemma wp_alloc: forall sz Q,
+  aforall (fun l => (l <> 0) //\\ valid_N l sz --* Q l) -->> wp (ALLOC sz) Q.
+Proof.
+  intros; red; intros.
+  apply wp_ramification with (Q := fun l => (l <> 0) //\\ valid_N l sz).
+  apply sepconj_imp_l with emp.
+  apply wp_weakest. apply triple_alloc.
+  rewrite sepconj_emp. assumption.
+Qed.
+
+Lemma wp_get: forall l v Q,
+  contains l v ** (contains l v --* Q v) -->> wp (GET l) Q.
+Proof.
+  intros.
+  assert (W: contains l v -->> wp (GET l) (fun v' => (v' = v) //\\ contains l v)).
+  { apply wp_weakest. apply triple_get. }
+  intros; red; intros.
+  eapply wp_ramification. eapply sepconj_imp_l. eexact W. 
+  eapply sepconj_imp_r. 2: eexact H.
+  intros h' H' v' h'' D (A & B). subst v'. apply H'; auto.
+Qed.
+
+Lemma wp_set: forall l v Q,
+  valid l ** aforall (fun v' => (contains l v --* Q v')) -->> wp (SET l v) Q. 
+Proof.
+  intros.
+  assert (W: valid l -->> wp (SET l v) (fun _ => contains l v)).
+  { apply wp_weakest. apply triple_set. }
+  intros; red; intros.
+  eapply wp_ramification. eapply sepconj_imp_l. eexact W. 
+  eapply sepconj_imp_r. 2: eexact H.
+  red; auto.
+Qed.
+
+Corollary wp_set': forall l v Q,
+  valid l ** (contains l v --* Q) -->> wp (SET l v) (fun _ => Q). 
+Proof.
+  intros; red; intros. apply wp_set. eapply sepconj_imp_r; eauto.
+  intros h' H' v'. auto.
+Qed.
+
+Lemma wp_free: forall l Q,
+  valid l ** aforall (fun v' => Q v') -->> wp (FREE l) Q.
+Proof.
+  intros.
+  assert (W: valid l -->> wp (FREE l) (fun _ => emp)).
+  { apply wp_weakest. apply triple_free. }
+  intros; red; intros.
+  eapply wp_ramification. eapply sepconj_imp_l. eexact W. 
+  eapply sepconj_imp_r. 2: eexact H.
+  red; intros. intros v h' D E. rewrite E in *. rewrite hunion_comm, hunion_empty by HDISJ.
+  apply H0.
+Qed.
+
+Corollary wp_free': forall l Q,
+  valid l ** Q -->> wp (FREE l) (fun _ => Q).
+Proof.
+  intros; red; intros. apply wp_free. eapply sepconj_imp_r; eauto.
+  intros h' H' v'. auto.
+Qed.
+
+Lemma wp_pick: forall n Q,
+  aforall (fun i => pure (0 <= i < n) --* Q i) -->> wp (PICK n) Q.
+Proof.
+  intros.
+  assert (W: emp -->> wp (PICK n) (fun i => pure (0 <= i < n))).
+  { apply wp_weakest. apply triple_pick. }
+  intros; red; intros.
+  eapply wp_ramification. eapply sepconj_imp_l. eexact W. 
+  eapply sepconj_imp_r. 2: rewrite sepconj_emp; eexact H.
+  red; auto.
+Qed.
+
+
+
