@@ -170,6 +170,24 @@ Ltac HDISJ :=
   | _ => idtac
   end.
 
+Lemma hunion_invert_r:
+  forall h1 h2 h,
+  hunion h h1 = hunion h h2 -> hdisjoint h h1 -> hdisjoint h h2 -> h1 = h2.
+Proof.
+  intros. apply heap_extensionality; intros l.
+  assert (hunion h h1 l = hunion h h2 l) by congruence.
+  cbn in H2. specialize (H0 l); specialize (H1 l). destruct (h l); intuition congruence.
+Qed.
+
+Lemma hunion_invert_l:
+  forall h1 h2 h,
+  hunion h1 h = hunion h2 h -> hdisjoint h1 h -> hdisjoint h2 h -> h1 = h2.
+Proof.
+  intros. apply hunion_invert_r with h.
+  rewrite <- ! (hunion_comm h) by HDISJ. auto.
+  HDISJ. HDISJ.
+Qed. 
+
 (** * 2. Assertions for separation logic *)
 
 Definition assertion : Type := heap -> Prop.
@@ -224,6 +242,13 @@ Definition pureconj (P: Prop) (Q: assertion) : assertion :=
   fun h => P /\ Q h.
 
 Notation "P //\\ Q" := (pureconj P Q) (at level 60, right associativity).
+
+(** Plain conjunction and disjunction. *)
+
+Definition aand (P Q: assertion) : assertion :=
+  fun h => P h /\ Q h.
+Definition aor (P Q: assertion) : assertion :=
+  fun h => P h \/ Q h.
 
 (** Extensional equality between assertions. *)
 
@@ -431,4 +456,97 @@ Proof.
   apply W1; auto. HDISJ.
   HDISJ.
   rewrite ! hunion_assoc. f_equal. apply hunion_comm. HDISJ.
+Qed.
+
+(** ** Precise assertions *)
+
+(** An assertion is precise if "it unambiguously carves out an area of the heap"
+   (in the words of Gotsman, Berdine, Cook, 2011). *)
+
+Definition precise (P: assertion) : Prop :=
+  forall h1 h2 h1' h2',
+  hdisjoint h1 h2 -> hdisjoint h1' h2' -> hunion h1 h2 = hunion h1' h2' ->
+  P h1 -> P h1' -> h1 = h1'.
+
+Lemma pure_precise: forall P,
+  precise (pure P).
+Proof.
+  unfold pure; intros; red; intros. destruct H2, H3. congruence.
+Qed.
+
+Lemma contains_precise: forall l v,
+  precise (contains l v).
+Proof.
+  unfold contains; intros; red; intros. congruence.
+Qed.
+
+Lemma valid_precise: forall l,
+  precise (valid l).
+Proof.
+  unfold valid; intros; red; intros. destruct H2 as (v1 & H2). destruct H3 as (v2 & H3). 
+  assert (Some v1 = Some v2).
+  { replace (Some v1) with (hunion h1 h2 l).
+    replace (Some v2) with (hunion h1' h2' l).
+    rewrite H1; auto.
+    rewrite H3; cbn. destruct (Z.eq_dec l l); congruence.
+    rewrite H2; cbn. destruct (Z.eq_dec l l); congruence.
+  }
+  congruence.
+Qed.
+
+Lemma sepconj_precise: forall P Q,
+  precise P -> precise Q -> precise (P ** Q).
+Proof.
+  intros; red; intros. 
+  destruct H4 as (h3 & h4 & P3 & Q4 & D & E). 
+  destruct H5 as (h3' & h4' & P3' & Q4' & D' & E').
+  subst h1 h1'.
+  assert (h3 = h3'). 
+  { apply H with (hunion h4 h2) (hunion h4' h2'); auto. HDISJ. HDISJ. 
+    rewrite <- ! hunion_assoc. auto. }
+  assert (h4 = h4').
+  { apply H0 with (hunion h3 h2) (hunion h3' h2'); auto. HDISJ. HDISJ.
+    rewrite <- ! hunion_assoc.
+    rewrite (hunion_comm h3) by HDISJ.
+    rewrite (hunion_comm h3') by HDISJ.
+    auto.
+  }
+  congruence.
+Qed.
+
+(** Distributivity laws for precise assertions. *)
+
+Lemma sepconj_and_distr_1: forall P1 P2 Q,
+  aand P1 P2 ** Q -->> aand (P1 ** Q) (P2 ** Q).
+Proof.
+  intros P1 P2 Q h (h1 & h2 & (P11 & P21) & Q2 & D & E); split; exists h1, h2; auto.
+Qed.
+
+Lemma sepconj_and_distr_2: forall P1 P2 Q,
+  precise Q ->
+  aand (P1 ** Q) (P2 ** Q) -->> aand P1 P2 ** Q.
+Proof.
+  intros P1 P2 Q PQ.
+  rewrite (sepconj_comm P1), (sepconj_comm P2). 
+  intros h ((h1 & h2 & Q1 & P12 & D & E) & (h1' & h2' & Q1' & P22 & D' & E')).
+  assert (h1 = h1').
+  { apply PQ with h2 h2'; auto. HDISJ. HDISJ. congruence. }
+  subst h1'.
+  assert (h2 = h2').
+  { apply hunion_invert_r with h1; auto; congruence. }
+  subst h2'.
+  unfold aand; exists h2, h1; intuition auto. HDISJ. rewrite hunion_comm by HDISJ; auto.
+Qed.
+
+(** Self-conjunction law for precise assertions. *)
+
+Lemma sepconj_self: forall P,
+  precise P ->
+  P ** P -->> P.
+Proof.
+  intros. intros h (h1 & h2 & P1 & P2 & D & E).
+  assert (h1 = h2). { apply H with h2 h1; auto. HDISJ. apply hunion_comm; HDISJ. }
+  subst h2.
+  assert (h = h1). { apply heap_extensionality; intros l. rewrite E; cbn. destruct (h1 l); auto. }
+  congruence.
 Qed.
