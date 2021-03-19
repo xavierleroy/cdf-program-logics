@@ -830,10 +830,10 @@ Definition CCR (lck: addr) (b: com) (c: com) :=
                                             (SEQ (UNLOCK lck) (PURE 0))))).
 
 Lemma triple_ccr:
-  forall lck R b c (B: Z -> Prop) P Q,
+  forall lck R b c B P Q,
   precise R ->
-  emp ⊢ ⦃ P ** R ⦄ b ⦃ fun v => B v //\\ (P ** R) ⦄ ->
-  emp ⊢ ⦃ (exists v, v <> 0 /\ B v) //\\ (P ** R) ⦄ c ⦃ fun _ => Q ** R ⦄ ->
+  emp ⊢ ⦃ P ** R ⦄ b ⦃ fun v => if v =? 0 then P ** R else B ⦄ ->
+  emp ⊢ ⦃ B ⦄ c ⦃ fun _ => Q ** R ⦄ ->
   lock_invariant lck R ⊢ ⦃ P ⦄ CCR lck b c ⦃ fun _ => Q ⦄.
 Proof.
   intros.
@@ -851,13 +851,13 @@ Proof.
   eapply triple_seq.
   { eapply triple_consequence_pre.
     rewrite <- sepconj_emp at 1. apply triple_frame_invariant. eexact H1.
-    intros h (U & V & W). split; auto. exists v; auto. }
+    intros h (X & Y). apply Z.eqb_neq in X. rewrite X in Y. auto. }
   apply triple_seq with (Q := emp ** Q).
   { rewrite sepconj_comm at 1. apply triple_frame. apply triple_unlock; auto. }
   apply triple_pure. rewrite sepconj_emp. unfold Qloop. cbn. red; auto.
 - (* B failed *)
   apply triple_consequence_pre with (P ** R).
-  2: { intros h (U & V & W); auto. }
+  2: { intros h (X & Y). subst v. auto. }
   eapply triple_seq with (Q := emp ** P).
   { rewrite sepconj_comm at 1. apply triple_frame. apply triple_unlock; auto. }
   apply triple_pure.
@@ -866,26 +866,33 @@ Qed.
 
 (** * 4. The producer/consumer problem *)
 
-(** ** 4.1.  With a one-place buffer *)
+(** A solution with a one-place buffer and binary semaphores *)
 
 (** We reuse the spinlocks of section 3.1 as binary semaphores. *)
 
 Definition WAIT := LOCK.
 Definition POST := UNLOCK.
 
-Definition PRODUCE (buff free busy data: Z) : com :=
+Definition PRODUCE (buff free busy: addr) (data: Z) : com :=
   SEQ (WAIT free)
       (SEQ (SET buff data)
            (POST busy)).
 
-Definition CONSUME (buff free busy: Z) : com :=
+Definition CONSUME (buff free busy: addr) : com :=
   SEQ (WAIT busy)
       (LET (GET buff) (fun data =>
            (SEQ (POST free) (PURE data)))).
 
-Definition buffer_invariant (R: Z -> assertion) (buff free busy: Z) :=
+Definition buffer_invariant (R: Z -> assertion) (buff free busy: addr) :=
     lock_invariant free (valid buff)
  ** lock_invariant busy (aexists (fun v => contains buff v ** R v)).
+
+Remark precise_buffer_invariant: forall (R: Z -> assertion) buff,
+  (forall v, precise (R v)) ->
+  precise (aexists (fun v => contains buff v ** R v)).
+Proof.
+  intros. apply aexists_precise. apply sepconj_param_precise; auto. apply contains_param_precise.
+Qed.
 
 Lemma triple_consume: forall R buff free busy,
   buffer_invariant R buff free busy ⊢
@@ -907,28 +914,6 @@ Proof.
   apply triple_pure. rewrite sepconj_emp. red; auto.
 Qed.
 
-Remark precise_buffer_invariant: forall (R: Z -> assertion) buff,
-  (forall v, precise (R v)) ->
-  precise (aexists (fun v => contains buff v ** R v)).
-Proof.
-  intros; red; intros.
-  destruct H3 as (v1 & A1), H4 as (v2 & A2).
-  assert (v1 = v2).
-  {
-  assert (h1 buff = Some v1).
-  { destruct A1 as (h3 & h4 & X & Y & Z & U). rewrite U, X. cbn. destruct (Z.eq_dec buff buff); congruence. }
-  assert (h1' buff = Some v2).
-  { destruct A2 as (h3 & h4 & X & Y & Z & U). rewrite U, X. cbn. destruct (Z.eq_dec buff buff); congruence. }
-  assert (E: hunion h1 h2 buff = hunion h1' h2' buff) by congruence.
-  cbn in E. rewrite H3, H4 in E. 
-  congruence.
-  }
-  subst v2. 
-  assert (P: precise (contains buff v1 ** R v1)).
-  { apply sepconj_precise; auto. apply contains_precise. }
-  eapply P; eauto.
-Qed. 
-
 Lemma triple_produce: forall (R: Z -> assertion) buff free busy data,
   (forall v, precise (R v)) ->
   buffer_invariant R buff free busy ⊢
@@ -946,9 +931,3 @@ Proof.
   apply triple_unlock. apply precise_buffer_invariant. assumption.
   red; intros. exists data; auto.
 Qed.
-
-
-
-
-   
-  
