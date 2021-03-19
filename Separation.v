@@ -468,50 +468,97 @@ Definition precise (P: assertion) : Prop :=
   hdisjoint h1 h2 -> hdisjoint h1' h2' -> hunion h1 h2 = hunion h1' h2' ->
   P h1 -> P h1' -> h1 = h1'.
 
+(** A parameterized assertion is precise if, in addition, the parameter
+   is uniquely determined as well. *)
+
+Definition param_precise {X: Type} (P: X -> assertion) : Prop :=
+  forall x1 x2 h1 h2 h1' h2',
+  hdisjoint h1 h2 -> hdisjoint h1' h2' -> hunion h1 h2 = hunion h1' h2' ->
+  P x1 h1 -> P x2 h1' -> x1 = x2 /\ h1 = h1'.
+
+Remark param_precise_precise:
+  forall (X: Type) (P: X -> assertion),
+  param_precise P -> forall x, precise (P x).
+Proof.
+  intros; red; intros. edestruct (H x x h1 h2 h1' h2'); eauto.
+Qed.
+
+Remark precise_param_precise:
+  forall P, precise P -> param_precise (fun _ : unit => P).
+Proof.
+  intros; red; intros. split. destruct x1, x2; auto. eauto.
+Qed.
+
 Lemma pure_precise: forall P,
   precise (pure P).
 Proof.
   unfold pure; intros; red; intros. destruct H2, H3. congruence.
 Qed.
 
+Lemma pure_param_precise: forall (X: Type) (P: X -> Prop),
+  (forall x1 x2, P x1 -> P x2 -> x1 = x2) ->
+  param_precise (fun x => pure (P x)).
+Proof.
+  unfold pure; intros; red; intros. destruct H3, H4. split. auto. congruence.
+Qed. 
+
+Lemma contains_param_precise: forall l,
+  param_precise (fun v => contains l v).
+Proof.
+  unfold contains; intros; red; intros.
+  assert (E: hunion h1 h2 l = hunion h1' h2' l) by congruence.
+  cbn in E. subst h1 h1'. rewrite ! hupdate_same in E.
+  replace x2 with x1 by congruence. auto.
+Qed.
+
 Lemma contains_precise: forall l v,
   precise (contains l v).
 Proof.
-  unfold contains; intros; red; intros. congruence.
+  intros. apply param_precise_precise. apply contains_param_precise.
+Qed.
+
+Lemma aexists_precise: forall (X: Type) (P: X -> assertion),
+  param_precise P -> precise (aexists P).
+Proof.
+  intros; red; intros. destruct H3 as (x1 & P1), H4 as (x2 & P2).
+  eapply H; eauto.
 Qed.
 
 Lemma valid_precise: forall l,
   precise (valid l).
 Proof.
-  unfold valid; intros; red; intros. destruct H2 as (v1 & H2). destruct H3 as (v2 & H3). 
-  assert (Some v1 = Some v2).
-  { replace (Some v1) with (hunion h1 h2 l).
-    replace (Some v2) with (hunion h1' h2' l).
-    rewrite H1; auto.
-    rewrite H3; cbn. destruct (Z.eq_dec l l); congruence.
-    rewrite H2; cbn. destruct (Z.eq_dec l l); congruence.
-  }
-  congruence.
+  intros. apply aexists_precise. apply contains_param_precise.
 Qed.
 
-Lemma sepconj_precise: forall P Q,
-  precise P -> precise Q -> precise (P ** Q).
+Lemma sepconj_param_precise: forall (X: Type) (P Q: X -> assertion),
+  param_precise P -> (forall x, precise (Q x)) ->
+  param_precise (fun x => P x ** Q x).
 Proof.
   intros; red; intros. 
   destruct H4 as (h3 & h4 & P3 & Q4 & D & E). 
   destruct H5 as (h3' & h4' & P3' & Q4' & D' & E').
   subst h1 h1'.
-  assert (h3 = h3'). 
+  assert (x1 = x2 /\ h3 = h3'). 
   { apply H with (hunion h4 h2) (hunion h4' h2'); auto. HDISJ. HDISJ. 
     rewrite <- ! hunion_assoc. auto. }
+  destruct H4. subst x2.
   assert (h4 = h4').
-  { apply H0 with (hunion h3 h2) (hunion h3' h2'); auto. HDISJ. HDISJ.
+  { apply (H0 x1) with (hunion h3 h2) (hunion h3' h2'); auto. HDISJ. HDISJ.
     rewrite <- ! hunion_assoc.
     rewrite (hunion_comm h3) by HDISJ.
     rewrite (hunion_comm h3') by HDISJ.
     auto.
   }
-  congruence.
+  subst; auto.
+Qed.
+
+Lemma sepconj_precise: forall P Q,
+  precise P -> precise Q -> precise (P ** Q).
+Proof.
+  intros.
+  assert (param_precise (fun _ : unit => P ** Q)).
+  { apply sepconj_param_precise. apply precise_param_precise; auto. auto. }
+  apply param_precise_precise in H1. auto. exact tt.
 Qed.
 
 (** Distributivity laws for precise assertions. *)
