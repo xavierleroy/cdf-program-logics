@@ -578,7 +578,7 @@ Proof.
 Qed. 
 
 Lemma triple_alloc: forall J sz,
-  J ⊢ ⦃ emp ⦄  ALLOC sz  ⦃ fun l => valid_N l sz ⦄.
+  J ⊢ ⦃ emp ⦄  ALLOC sz  ⦃ fun l => (l <> 0) //\\ valid_N l sz ⦄.
 Proof.
   intros J sz n h Ph. red in Ph; subst h.
   destruct n; constructor; auto.
@@ -596,7 +596,7 @@ Proof.
     destruct EITHER.
     rewrite ! hinit_inside by auto. auto.
     rewrite ! hinit_outside by auto. auto.
-  + apply safe_pure. apply valid_N_init.
+  + apply safe_pure. split. auto. apply valid_N_init.
 Qed.
 
 Lemma triple_free: forall J l,
@@ -654,7 +654,7 @@ Proof.
   intros. intros n h Ph. apply safe_consequence with Q'; auto.
 Qed.
 
-Lemma triple_exists_pre: forall J (P: Z -> assertion) c Q,
+Lemma triple_exists_pre: forall {X: Type} J (P: X -> assertion) c Q,
   (forall v, J ⊢ ⦃ P v ⦄ c ⦃ Q ⦄) ->
   J ⊢ ⦃ aexists P ⦄ c ⦃ Q ⦄.
 Proof.
@@ -866,7 +866,9 @@ Qed.
 
 (** * 4. The producer/consumer problem *)
 
-(** A solution with a one-place buffer and binary semaphores *)
+(** 4.1.  With a one-place buffer and binary semaphores *)
+
+Module ProdCons1.
 
 (** We reuse the spinlocks of section 3.1 as binary semaphores. *)
 
@@ -931,3 +933,135 @@ Proof.
   apply triple_unlock. apply precise_buffer_invariant. assumption.
   red; intros. exists data; auto.
 Qed.
+
+End ProdCons1.
+
+(** ** 4.2. With an unbounded buffer implemented as a list *)
+
+Module ProdCons2.
+
+Definition PRODUCE (buff: addr) (data: Z) : com :=
+  LET (ALLOC 2) (fun a =>
+    SEQ (SET a data)
+        (ATOMIC (LET (GET buff) (fun prev =>
+                   SEQ (SET (a + 1) prev) (SET buff a))))).
+
+Definition POP (buff: addr) : com :=
+  REPEAT (ATOMIC (
+    LET (GET buff) (fun b =>
+        IFTHENELSE b
+          (LET (GET (b + 1)) (fun next => SEQ (SET buff next) (PURE b)))
+          (PURE 0)))).
+
+Definition CONSUME (buff: addr) : com :=
+  LET (POP buff) (fun b =>
+  LET (GET b) (fun data =>
+    SEQ (FREE b) (SEQ (FREE (b + 1)) (PURE data)))).
+
+Fixpoint list_invariant (R: Z -> assertion) (l: list Z) (p: addr) : assertion :=
+  match l with
+  | nil => (p = 0) //\\ emp
+  | x :: l => (p <> 0) //\\ aexists (fun q => contains p x ** contains (p + 1) q ** R x ** list_invariant R l q)
+  end.
+
+Definition buffer_invariant (R: Z -> assertion) (buff: addr) : assertion :=
+  aexists (fun l => aexists (fun p => contains buff p ** list_invariant R l p)).
+
+Lemma triple_produce: forall R buff data,
+  buffer_invariant R buff ⊢
+           ⦃ R data ⦄ PRODUCE buff data ⦃ fun _ => emp ⦄.
+Proof.
+  intros. eapply triple_let.
+  { rewrite <- (sepconj_emp (R data)). apply triple_frame. apply triple_alloc. }
+  intros a; cbn. 
+  rewrite lift_pureconj. apply triple_simple_conj_pre; intros NOT0. 
+  rewrite ! sepconj_assoc, sepconj_emp.
+  apply triple_seq with (contains a data ** valid (a + 1) ** R data).
+  { apply triple_frame. apply triple_set. }
+  apply triple_atomic.
+  rewrite sepconj_comm. unfold buffer_invariant. 
+  rewrite lift_aexists; apply triple_exists_pre; intros l.
+  rewrite lift_aexists; apply triple_exists_pre; intros p.
+  rewrite sepconj_assoc.
+  eapply triple_let.
+  { apply triple_frame. apply triple_get. }
+  intros p'; cbn. rewrite lift_pureconj. apply triple_simple_conj_pre; intros EQ; subst p'.
+  eapply triple_seq.
+  { rewrite (sepconj_pick3 (valid (a + 1))). rewrite sepconj_pick2. 
+    apply triple_frame with (Q := fun _ => contains  (a + 1) p).
+    apply triple_set. }
+  rewrite sepconj_pick2. eapply triple_consequence_post.
+  { apply triple_frame. eapply triple_consequence_pre. apply triple_set.
+    intros h A; exists p; auto. }
+  cbn. intros _. rewrite sepconj_emp. 
+  rewrite <- (sepconj_swap3 (list_invariant R l p)).
+  rewrite (sepconj_pick2 (contains a data)). 
+  intros h A. exists (data :: l), a.
+  revert h A. apply sepconj_imp_r.
+  intros h A. cbn. split; auto. exists p; exact A.
+Qed.
+
+Lemma triple_pop: forall R buff,
+  buffer_invariant R buff ⊢
+           ⦃ emp ⦄ POP buff ⦃ fun p => aexists (fun x => contains p x ** valid (p + 1) ** R x) ⦄.
+Proof.
+  intros.
+  set (Qloop := fun p => if p =? 0 then emp else aexists (fun x => contains p x ** valid (p + 1) ** R x)).
+  apply triple_consequence_post with (fun p => (p <> 0) //\\ Qloop p).
+  apply triple_repeat.
+- apply triple_atomic.
+  rewrite sepconj_emp.
+  apply triple_exists_pre; intros l.
+  apply triple_exists_pre; intros p.
+  eapply triple_let.
+  { apply triple_frame. apply triple_get. }
+  cbn. intros p'. rewrite lift_pureconj; apply triple_simple_conj_pre; intros E; subst p'.
+  apply triple_ifthenelse.
+  + apply triple_simple_conj_pre; intros NOTZERO.
+    rewrite sepconj_comm. destruct l as [ | x l]; cbn; rewrite lift_pureconj; apply triple_simple_conj_pre; intro; try lia.
+    rewrite lift_aexists; apply triple_exists_pre; intros t.
+    eapply triple_let.
+    { rewrite ! sepconj_assoc, sepconj_pick2. apply triple_frame. apply triple_get. }
+    intros t'; cbn. rewrite lift_pureconj; apply triple_simple_conj_pre; intros E; subst t'.
+    rewrite <- ! sepconj_assoc, sepconj_comm, ! sepconj_assoc.  
+    eapply triple_seq.
+    { apply triple_frame with (Q := fun _ => contains buff t).
+      eapply triple_consequence_pre. apply triple_set. 
+      intros h A; exists p; auto. }
+     apply triple_pure.
+     unfold Qloop. apply Z.eqb_neq in NOTZERO; rewrite NOTZERO.
+     rewrite (sepconj_pick2 (contains p x)). 
+     rewrite <- (sepconj_pick3 (contains buff t)). 
+     rewrite <- (sepconj_pick2 (contains buff t)).
+     intros h A. rewrite lift_aexists. exists x. rewrite ! sepconj_assoc.
+     eapply sepconj_imp_r; eauto.
+     intros h' B. apply sepconj_imp_l with (P := contains (p + 1) t).
+     intros h'' C. exists t; auto.
+     revert h' B. apply sepconj_imp_r. apply sepconj_imp_r. 
+     intros h''' D. red. exists l; exists t; auto.
+  + apply triple_simple_conj_pre; intros ZERO.
+    apply triple_pure. unfold Qloop; cbn. rewrite sepconj_emp. intros h A; exists l, p; auto.
+- unfold Qloop; cbn. red; auto.
+- unfold Qloop. intros v h [A B]. apply Z.eqb_neq in A. rewrite A in B. auto.
+Qed.  
+
+Lemma triple_consume: forall R buff,
+  buffer_invariant R buff ⊢
+           ⦃ emp ⦄ CONSUME buff ⦃ fun data => R data ⦄.
+Proof.
+  intros. eapply triple_let. apply triple_pop.
+  intros b. cbn. apply triple_exists_pre; intros p.
+  eapply triple_let.
+  { apply triple_frame. apply triple_get. }
+  intros p'; cbn; rewrite lift_pureconj; apply triple_simple_conj_pre; intros E; subst p'.
+  eapply triple_seq.
+  { apply triple_frame with (Q := fun _ => emp).
+    eapply triple_consequence_pre. apply triple_free. intros h A; exists p; auto. }
+  rewrite sepconj_emp.
+  eapply triple_seq.
+  { apply triple_frame with (Q := fun _ => emp). apply triple_free. }
+  apply triple_pure. rewrite sepconj_emp. red; auto.
+Qed.
+
+End ProdCons2.
+
