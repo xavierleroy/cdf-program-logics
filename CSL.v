@@ -361,6 +361,46 @@ Proof.
   apply safe_pure. auto.
 Qed.
 
+(** *** Sharing some state in the invariant *)
+
+Lemma safe_share:
+  forall Q (J J': invariant) n c h h',
+  safe n c h Q (J ** J') -> 
+  hdisjoint h h' -> J' h' ->
+  safe n c (hunion h h') (fun v => Q v ** J') J.
+Proof.
+  induction n; intros.
+- constructor.
+- inv H.
+  + constructor. exists h, h'; auto.
+  + constructor; auto.
+  * intros. apply ACC in H. cbn. destruct (h l); congruence.
+  * intros. apply (IMM hf (hunion h' hj)). HDISJ. 
+    subst h0. rewrite ! hunion_assoc. auto.
+    rewrite hunion_comm by HDISJ. exists hj, h'; intuition auto. HDISJ.
+  * intros.
+    edestruct (STEP hf (hunion h' hj)) as (h1' & hj' & U & V & X & Y).
+    4: eauto.
+    HDISJ.
+    subst h0. rewrite ! hunion_assoc. auto.
+    rewrite hunion_comm by HDISJ. exists hj, h'; intuition auto. HDISJ.
+    destruct X as (hj1' & hj2' & A & B & C & D).
+    subst hj' h'0 h0.
+    exists (hunion h1' hj2'), hj1'.
+    split. HDISJ.
+    split. rewrite (hunion_comm hj2') by HDISJ. rewrite ! hunion_assoc. auto.
+    split. auto.
+    apply IHn; auto. HDISJ.
+Qed.
+
+Lemma triple_share: forall J J' P c Q,
+  J ** J' ⊢ ⦃ P ⦄ c ⦃ Q ⦄ ->
+  J ⊢ ⦃ P ** J' ⦄ c ⦃ fun v => Q v ** J' ⦄.
+Proof.
+ intros; intros n h (h1 & h2 & Ph1 & J'h2 & D & U). subst h.
+  apply safe_share; auto.
+Qed.
+
 (** *** Sequential commands *)
 
 Lemma triple_pure: forall J P Q v,
@@ -718,34 +758,35 @@ Qed.
 
 (** * 3. Mutual exclusion *)
 
-(** ** 3.1.  Spinlocks *)
+(** ** 3.1.  Binary semaphores *)
 
-(** A spinlock is a memory location that contains 0 if it is locked (busy)
-    and 1 if it is unlocked (available). *)
+(** A binary semaphore is a memory location that contains 0 if it is empty
+    and 1 if it is busy. *)
 
-Definition lock_invariant (lck: addr) (R: assertion) : assertion :=
+Definition sem_invariant (lck: addr) (R: assertion) : assertion :=
   aexists (fun v => contains lck v ** (if Z.eqb v 0 then emp else R)).
 
-(** Locking a spinlock is achieved by atomically setting it to 0 until
-    its previous value was not 0. *)
+(** Acquiring a semaphore (the P operation) is achieved by atomically
+    setting it to 0 until its previous value was not 0. *)
 
 Definition SWAP (l: addr) (new_v: Z) : com :=
   ATOMIC (LET (GET l) (fun old_v => SEQ (SET l new_v) (PURE old_v))).
 
-Definition LOCK (lck: addr) : com :=
+Definition ACQUIRE (lck: addr) : com :=
   REPEAT (SWAP lck 0).
 
-(** Unlocking a spinlock is achieved by atomically setting it to 1. *)
+(** Releasing a semaphore (the V operation) is achieved by atomically
+    setting it to 1. *)
 
-Definition UNLOCK (lck: addr) : com :=
+Definition RELEASE (lck: addr) : com :=
   ATOMIC (SET lck 1).
 
 Lemma triple_swap:
   forall lck R,
-  lock_invariant lck R ⊢ ⦃ emp ⦄ SWAP lck 0 ⦃ fun v => if Z.eqb v 0 then emp else R ⦄.
+  sem_invariant lck R ⊢ ⦃ emp ⦄ SWAP lck 0 ⦃ fun v => if Z.eqb v 0 then emp else R ⦄.
 Proof.
   intros. apply triple_atomic.
-  rewrite sepconj_emp. unfold lock_invariant at 1. 
+  rewrite sepconj_emp. unfold sem_invariant at 1. 
   apply triple_exists_pre; intros v. 
   eapply triple_let with
   (Q := fun v' => ((v' = v) //\\ contains lck v) ** (if v =? 0 then emp else R)).
@@ -758,13 +799,13 @@ Proof.
   apply triple_set.
   red; intros. exists v; auto.
   apply triple_pure.
-  unfold lock_invariant. red; intros. rewrite sepconj_comm, lift_aexists. exists 0.
+  unfold sem_invariant. red; intros. rewrite sepconj_comm, lift_aexists. exists 0.
   rewrite Z.eqb_refl. rewrite <- (sepconj_comm emp), sepconj_emp. assumption.
 Qed.
 
-Lemma triple_lock:
+Lemma triple_acquire:
   forall lck R,
-  lock_invariant lck R ⊢ ⦃ emp ⦄ LOCK lck ⦃ fun _ => R ⦄.
+  sem_invariant lck R ⊢ ⦃ emp ⦄ ACQUIRE lck ⦃ fun _ => R ⦄.
 Proof.
   intros. 
   apply triple_consequence_post with (Q' := fun v => (v <> 0) //\\ (if Z.eqb v 0 then emp else R)).
@@ -773,13 +814,13 @@ Proof.
   intros v h [H1 H2]. apply Z.eqb_neq in H1. rewrite H1 in H2. auto.
 Qed.
 
-Lemma triple_unlock:
+Lemma triple_release:
   forall lck R,
   precise R ->
-  lock_invariant lck R ⊢ ⦃ R ⦄ UNLOCK lck ⦃ fun _ => emp ⦄.
+  sem_invariant lck R ⊢ ⦃ R ⦄ RELEASE lck ⦃ fun _ => emp ⦄.
 Proof.
   intros. apply triple_atomic.
-  rewrite sepconj_comm. unfold lock_invariant at 1. rewrite lift_aexists.
+  rewrite sepconj_comm. unfold sem_invariant at 1. rewrite lift_aexists.
   apply triple_exists_pre. intros v. rewrite sepconj_assoc. 
   apply triple_consequence_post with (Q' := fun _ => contains lck 1 ** (if v =? 0 then emp else R) ** R).
   apply triple_frame. 
@@ -797,24 +838,24 @@ Qed.
 (** ** 3.2.  Critical regions *)
 
 (** A critical region is a command that is run in mutual exclusion,
-    while holding the associated spinlock. *)
+    while holding the associated lock. *)
 
 Definition CRITREGION (lck: addr) (c: com) :=
-  SEQ (LOCK lck) (LET c (fun v => SEQ (UNLOCK lck) (PURE v))).
+  SEQ (ACQUIRE lck) (LET c (fun v => SEQ (RELEASE lck) (PURE v))).
 
 Lemma triple_critregion:
   forall lck R c P Q,
   precise R ->
   emp ⊢ ⦃ P ** R ⦄ c ⦃ fun v => Q v ** R ⦄ ->
-  lock_invariant lck R ⊢ ⦃ P ⦄ CRITREGION lck c ⦃ Q ⦄.
+  sem_invariant lck R ⊢ ⦃ P ⦄ CRITREGION lck c ⦃ Q ⦄.
 Proof.
   intros.
   apply triple_seq with (Q := R ** P).
-  rewrite <- (sepconj_emp P) at 1. apply triple_frame. apply triple_lock.
+  rewrite <- (sepconj_emp P) at 1. apply triple_frame. apply triple_acquire.
   eapply triple_let.
   rewrite sepconj_comm. rewrite <- sepconj_emp at 1. apply triple_frame_invariant. apply H0.
   intros. simpl. apply triple_seq with (Q := emp ** Q v).
-  rewrite sepconj_comm. apply triple_frame. apply triple_unlock; auto.
+  rewrite sepconj_comm. apply triple_frame. apply triple_release; auto.
   rewrite sepconj_emp. apply triple_pure. red; auto.
 Qed.
 
@@ -825,16 +866,16 @@ Qed.
     exclusion but only when a condition [b] is true. *)
 
 Definition CCR (lck: addr) (b: com) (c: com) :=
-  REPEAT (SEQ (LOCK lck)
-              (LET b (fun v => IFTHENELSE v (SEQ c (SEQ (UNLOCK lck) (PURE 1)))
-                                            (SEQ (UNLOCK lck) (PURE 0))))).
+  REPEAT (SEQ (ACQUIRE lck)
+              (LET b (fun v => IFTHENELSE v (SEQ c (SEQ (RELEASE lck) (PURE 1)))
+                                            (SEQ (RELEASE lck) (PURE 0))))).
 
 Lemma triple_ccr:
   forall lck R b c B P Q,
   precise R ->
   emp ⊢ ⦃ P ** R ⦄ b ⦃ fun v => if v =? 0 then P ** R else B ⦄ ->
   emp ⊢ ⦃ B ⦄ c ⦃ fun _ => Q ** R ⦄ ->
-  lock_invariant lck R ⊢ ⦃ P ⦄ CCR lck b c ⦃ fun _ => Q ⦄.
+  sem_invariant lck R ⊢ ⦃ P ⦄ CCR lck b c ⦃ fun _ => Q ⦄.
 Proof.
   intros.
   set (Qloop := fun v => if v =? 0 then P else Q).
@@ -843,7 +884,7 @@ Proof.
   apply triple_repeat.
   2: { unfold Qloop. intros v U. simpl in U. auto. }
   apply triple_seq with (Q := R ** P).
-  { rewrite <- (sepconj_emp P) at 1. apply triple_frame. apply triple_lock. }
+  { rewrite <- (sepconj_emp P) at 1. apply triple_frame. apply triple_acquire. }
   rewrite sepconj_comm at 1.
   eapply triple_let. rewrite <- sepconj_emp at 1. apply triple_frame_invariant. eexact H0.
   intros v. apply triple_ifthenelse.
@@ -853,13 +894,13 @@ Proof.
     rewrite <- sepconj_emp at 1. apply triple_frame_invariant. eexact H1.
     intros h (X & Y). apply Z.eqb_neq in X. rewrite X in Y. auto. }
   apply triple_seq with (Q := emp ** Q).
-  { rewrite sepconj_comm at 1. apply triple_frame. apply triple_unlock; auto. }
+  { rewrite sepconj_comm at 1. apply triple_frame. apply triple_release; auto. }
   apply triple_pure. rewrite sepconj_emp. unfold Qloop. cbn. red; auto.
 - (* B failed *)
   apply triple_consequence_pre with (P ** R).
   2: { intros h (X & Y). subst v. auto. }
   eapply triple_seq with (Q := emp ** P).
-  { rewrite sepconj_comm at 1. apply triple_frame. apply triple_unlock; auto. }
+  { rewrite sepconj_comm at 1. apply triple_frame. apply triple_release; auto. }
   apply triple_pure.
   rewrite sepconj_emp. unfold Qloop. cbn. red; auto.
 Qed.
@@ -870,24 +911,19 @@ Qed.
 
 Module ProdCons1.
 
-(** We reuse the spinlocks of section 3.1 as binary semaphores. *)
-
-Definition WAIT := LOCK.
-Definition POST := UNLOCK.
-
 Definition PRODUCE (buff free busy: addr) (data: Z) : com :=
-  SEQ (WAIT free)
+  SEQ (ACQUIRE free)
       (SEQ (SET buff data)
-           (POST busy)).
+           (RELEASE busy)).
 
 Definition CONSUME (buff free busy: addr) : com :=
-  SEQ (WAIT busy)
+  SEQ (ACQUIRE busy)
       (LET (GET buff) (fun data =>
-           (SEQ (POST free) (PURE data)))).
+           (SEQ (RELEASE free) (PURE data)))).
 
 Definition buffer_invariant (R: Z -> assertion) (buff free busy: addr) :=
-    lock_invariant free (valid buff)
- ** lock_invariant busy (aexists (fun v => contains buff v ** R v)).
+    sem_invariant free (valid buff)
+ ** sem_invariant busy (aexists (fun v => contains buff v ** R v)).
 
 Remark precise_buffer_invariant: forall (R: Z -> assertion) buff,
   (forall v, precise (R v)) ->
@@ -904,14 +940,14 @@ Proof.
   eapply triple_seq.
   unfold buffer_invariant. rewrite sepconj_comm.
   apply triple_frame_invariant.
-  apply triple_lock.
+  apply triple_acquire.
   apply triple_exists_pre. intros v.
   eapply triple_let.
   apply triple_frame. apply triple_get.
   intros v'. cbn. rewrite lift_pureconj. apply triple_simple_conj_pre. intros EQ; subst v'.
   apply triple_seq with (emp ** R v).
   unfold buffer_invariant. apply triple_frame_invariant. apply triple_frame.
-  eapply triple_consequence_pre. apply triple_unlock. apply valid_precise.
+  eapply triple_consequence_pre. apply triple_release. apply valid_precise.
   red; intros; exists v; auto.
   apply triple_pure. rewrite sepconj_emp. red; auto.
 Qed.
@@ -925,12 +961,12 @@ Proof.
   apply triple_seq with (valid buff ** R data).
   unfold buffer_invariant. apply triple_frame_invariant.
   rewrite <- (sepconj_emp (R data)) at 1.
-  apply triple_frame. apply triple_lock.
+  apply triple_frame. apply triple_acquire.
   apply triple_seq with (contains buff data ** R data).
   apply triple_frame. apply triple_set.
   unfold buffer_invariant. rewrite sepconj_comm. apply triple_frame_invariant.
   eapply triple_consequence_pre.
-  apply triple_unlock. apply precise_buffer_invariant. assumption.
+  apply triple_release. apply precise_buffer_invariant. assumption.
   red; intros. exists data; auto.
 Qed.
 
