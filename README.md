@@ -14,4 +14,5 @@ An HTML pretty-printing of the commented sources is also available:
    * Module [Seplog](https://xavierleroy.org/cdf-program-logics/CDF.Seplog.html): separation logic for the functional/imperative language PTR.
    * Library [Separation](https://xavierleroy.org/cdf-program-logics/CDF.Separation.html): definitions and properties of heaps and separation logic assertions.
 
-
+3. Shared-memory concurrency: concurrent separation logic
+   * Module [CSL](https://xavierleroy.org/cdf-program-logics/CDF.CSL.html): concurrent separation logic for the PTR language + parallel and atomic constructs.
