@@ -16,3 +16,7 @@ An HTML pretty-printing of the commented sources is also available:
 
 3. Shared-memory concurrency: concurrent separation logic
    * Module [CSL](https://xavierleroy.org/cdf-program-logics/CDF.CSL.html): concurrent separation logic for the PTR language + parallel and atomic constructs.
+
+4. Hoare monads and Dijkstra monads
+   * Module [Monads](https://xavierleroy.org/cdf-program-logics/CDF.Monads.html)
+   * Library [Delay](https://xavierleroy.org/cdf-program-logics/CDF.Delay.html) (coinductive definition of possibly nonterminating computations).

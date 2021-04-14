@@ -35,8 +35,8 @@
 <span class="kwd">Lemma</span> <span class="id"><a name="heap_extensionality">heap_extensionality</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">h1</span> <span class="id">h2</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>),<br/>
 &nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">l</span>, <span class="id">h1</span> <span class="id">l</span> = <span class="id">h2</span> <span class="id">l</span>) -&gt; <span class="id">h1</span> = <span class="id">h2</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof118')">Proof.</div>
-<div class="proofscript" id="proof118">
+<div class="toggleproof" onclick="toggleDisplay('proof256')">Proof.</div>
+<div class="proofscript" id="proof256">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">h1</span> <span class="kwd">as</span> [<span class="id">c1</span> <span class="id">fin1</span>], <span class="id">h2</span> <span class="kwd">as</span> [<span class="id">c2</span> <span class="id">fin2</span>].<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">c1</span> = <span class="id">c2</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html#functional_extensionality">functional_extensionality</a></span>; <span class="tactic">auto</span>).<br/>
 &nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">c2</span>. <span class="tactic">f_equal</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.PropExtensionality.html#proof_irrelevance">proof_irrelevance</a></span>.<br/>
@@ -46,8 +46,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="hempty">hempty</a></span> : <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> :=<br/>
 &nbsp;&nbsp;{| <span class="id"><a href="CDF.Separation.html#contents">contents</a></span> := <span class="kwd">fun</span> <span class="id">l</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> |}.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof119')">Next Obligation.</div>
-<div class="proofscript" id="proof119">
+<div class="toggleproof" onclick="toggleDisplay('proof257')">Next Obligation.</div>
+<div class="proofscript" id="proof257">
 &nbsp;&nbsp;<span class="id">exists</span> 0; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
@@ -56,22 +56,22 @@ Qed.</div>
 <br/>
 <span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="hupdate">hupdate</a></span> (<span class="id">l</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) (<span class="id">v</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>) : <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> :=<br/>
 &nbsp;&nbsp;{| <span class="id"><a href="CDF.Separation.html#contents">contents</a></span> := <span class="kwd">fun</span> <span class="id">l</span>' =&gt; <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>' <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span> <span class="kwd">else</span> <span class="id">h</span> <span class="id">l</span>' |}.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof120')">Next Obligation.</div>
-<div class="proofscript" id="proof120">
+<div class="toggleproof" onclick="toggleDisplay('proof258')">Next Obligation.</div>
+<div class="proofscript" id="proof258">
 &nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="CDF.Separation.html#isfinite">isfinite</a></span> <span class="id">h</span>) <span class="kwd">as</span> (<span class="id">i</span> &amp; <span class="id">fin</span>).<br/>
 &nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.max">Z.max</a></span> <span class="id">i</span> (<span class="id">l</span> + 1)); <span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">j</span>). <span class="id">lia</span>. <span class="tactic">apply</span> <span class="id">fin</span>; <span class="id">lia</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hupdate_same">hupdate_same</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span> <span class="id">h</span>, (<span class="id"><a href="CDF.Separation.html#hupdate">hupdate</a></span> <span class="id">l</span> <span class="id">v</span> <span class="id">h</span>) <span class="id">l</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof121')">Proof.</div>
-<div class="proofscript" id="proof121">
+<div class="toggleproof" onclick="toggleDisplay('proof259')">Proof.</div>
+<div class="proofscript" id="proof259">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="id">cbn</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>); <span class="tactic">congruence</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hupdate_other">hupdate_other</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span> <span class="id">h</span> <span class="id">l</span>', <span class="id">l</span> &lt;&gt; <span class="id">l</span>' -&gt; (<span class="id"><a href="CDF.Separation.html#hupdate">hupdate</a></span> <span class="id">l</span> <span class="id">v</span> <span class="id">h</span>) <span class="id">l</span>' = <span class="id">h</span> <span class="id">l</span>'.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof122')">Proof.</div>
-<div class="proofscript" id="proof122">
+<div class="toggleproof" onclick="toggleDisplay('proof260')">Proof.</div>
+<div class="proofscript" id="proof260">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="id">cbn</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>'); <span class="tactic">congruence</span>.<br/>
 Qed.</div>
 <br/>
@@ -79,8 +79,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="hfree">hfree</a></span> (<span class="id">l</span>: <span class="id"><a href="CDF.Separation.html#addr">addr</a></span>) (<span class="id">h</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>) : <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> :=<br/>
 &nbsp;&nbsp;{| <span class="id"><a href="CDF.Separation.html#contents">contents</a></span> := <span class="kwd">fun</span> <span class="id">l</span>' =&gt; <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>' <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <span class="kwd">else</span> <span class="id">h</span> <span class="id">l</span>' |}.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof123')">Next Obligation.</div>
-<div class="proofscript" id="proof123">
+<div class="toggleproof" onclick="toggleDisplay('proof261')">Next Obligation.</div>
+<div class="proofscript" id="proof261">
 &nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="CDF.Separation.html#isfinite">isfinite</a></span> <span class="id">h</span>) <span class="kwd">as</span> (<span class="id">i</span> &amp; <span class="id">fin</span>).<br/>
 &nbsp;&nbsp;<span class="id">exists</span> <span class="id">i</span>; <span class="tactic">intros</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">j</span>); <span class="tactic">auto</span>.<br/>
 Qed.</div>
@@ -92,8 +92,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hinit_inside">hinit_inside</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h</span> <span class="id">sz</span> <span class="id">l</span> <span class="id">l</span>', <span class="id">l</span> &lt;= <span class="id">l</span>' &lt; <span class="id">l</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">sz</span> -&gt; <span class="id"><a href="CDF.Separation.html#hinit">hinit</a></span> <span class="id">l</span> <span class="id">sz</span> <span class="id">h</span> <span class="id">l</span>' = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 0.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof124')">Proof.</div>
-<div class="proofscript" id="proof124">
+<div class="toggleproof" onclick="toggleDisplay('proof262')">Proof.</div>
+<div class="proofscript" id="proof262">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">sz</span>; <span class="tactic">intros</span>; <span class="id">cbn</span>.<br/>
 - <span class="id">lia</span>.<br/>
 - <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>'); <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id">IHsz</span>. <span class="id">lia</span>.<br/>
@@ -101,8 +101,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hinit_outside">hinit_outside</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h</span> <span class="id">sz</span> <span class="id">l</span> <span class="id">l</span>', <span class="id">l</span>' &lt; <span class="id">l</span> \/ <span class="id">l</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">sz</span> &lt;= <span class="id">l</span>' -&gt; <span class="id"><a href="CDF.Separation.html#hinit">hinit</a></span> <span class="id">l</span> <span class="id">sz</span> <span class="id">h</span> <span class="id">l</span>' = <span class="id">h</span> <span class="id">l</span>'.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof125')">Proof.</div>
-<div class="proofscript" id="proof125">
+<div class="toggleproof" onclick="toggleDisplay('proof263')">Proof.</div>
+<div class="proofscript" id="proof263">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">sz</span>; <span class="tactic">intros</span>; <span class="id">cbn</span>.<br/>
 - <span class="tactic">auto</span>.<br/>
 - <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">l</span> <span class="id">l</span>'). <span class="id">lia</span>. <span class="tactic">apply</span> <span class="id">IHsz</span>; <span class="id">lia</span>.<br/>
@@ -115,46 +115,46 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hdisjoint_sym">hdisjoint_sym</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span>, <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> <span class="id">h2</span> &lt;-&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h2</span> <span class="id">h1</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof126')">Proof.</div>
-<div class="proofscript" id="proof126">
+<div class="toggleproof" onclick="toggleDisplay('proof264')">Proof.</div>
+<div class="proofscript" id="proof264">
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span>; <span class="tactic">intros</span>; <span class="tactic">split</span>; <span class="tactic">intros</span> <span class="id">H</span> <span class="id">l</span>; <span class="id">specialize</span> (<span class="id">H</span> <span class="id">l</span>); <span class="tactic">tauto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="hunion">hunion</a></span> (<span class="id">h1</span> <span class="id">h2</span>: <span class="id"><a href="CDF.Separation.html#heap">heap</a></span>) : <span class="id"><a href="CDF.Separation.html#heap">heap</a></span> :=<br/>
 &nbsp;&nbsp;{| <span class="id"><a href="CDF.Separation.html#contents">contents</a></span> := <span class="kwd">fun</span> <span class="id">l</span> =&gt; <span class="kwd">if</span> <span class="id">h1</span> <span class="id">l</span> <span class="kwd">then</span> <span class="id">h1</span> <span class="id">l</span> <span class="kwd">else</span> <span class="id">h2</span> <span class="id">l</span> |}.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof127')">Next Obligation.</div>
-<div class="proofscript" id="proof127">
+<div class="toggleproof" onclick="toggleDisplay('proof265')">Next Obligation.</div>
+<div class="proofscript" id="proof265">
 &nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="CDF.Separation.html#isfinite">isfinite</a></span> <span class="id">h1</span>) <span class="kwd">as</span> (<span class="id">i1</span> &amp; <span class="id">fin1</span>), (<span class="id"><a href="CDF.Separation.html#isfinite">isfinite</a></span> <span class="id">h2</span>) <span class="kwd">as</span> (<span class="id">i2</span> &amp; <span class="id">fin2</span>).<br/>
 &nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.max">Z.max</a></span> <span class="id">i1</span> <span class="id">i2</span>); <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id">fin1</span>, <span class="id">fin2</span> <span class="tactic">by</span> <span class="id">lia</span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hunion_comm">hunion_comm</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span>, <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> <span class="id">h2</span> -&gt; <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h2</span> <span class="id">h1</span> = <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h2</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof128')">Proof.</div>
-<div class="proofscript" id="proof128">
+<div class="toggleproof" onclick="toggleDisplay('proof266')">Proof.</div>
+<div class="proofscript" id="proof266">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span>; <span class="id">cbn</span>.<br/>
 &nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">H</span> <span class="id">l</span>). <span class="tactic">destruct</span> (<span class="id">h1</span> <span class="id">l</span>), (<span class="id">h2</span> <span class="id">l</span>); <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hunion_assoc">hunion_assoc</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">h3</span>, <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h2</span>) <span class="id">h3</span> = <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h2</span> <span class="id">h3</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof129')">Proof.</div>
-<div class="proofscript" id="proof129">
+<div class="toggleproof" onclick="toggleDisplay('proof267')">Proof.</div>
+<div class="proofscript" id="proof267">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span>; <span class="id">cbn</span>. <span class="tactic">destruct</span> (<span class="id">h1</span> <span class="id">l</span>); <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hunion_empty">hunion_empty</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h</span>, <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id"><a href="CDF.Separation.html#hempty">hempty</a></span> <span class="id">h</span> = <span class="id">h</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof130')">Proof.</div>
-<div class="proofscript" id="proof130">
+<div class="toggleproof" onclick="toggleDisplay('proof268')">Proof.</div>
+<div class="proofscript" id="proof268">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span>; <span class="id">cbn</span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="hdisjoint_union_l">hdisjoint_union_l</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">h3</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h2</span>) <span class="id">h3</span> &lt;-&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> <span class="id">h3</span> /\ <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h2</span> <span class="id">h3</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof131')">Proof.</div>
-<div class="proofscript" id="proof131">
+<div class="toggleproof" onclick="toggleDisplay('proof269')">Proof.</div>
+<div class="proofscript" id="proof269">
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span>, <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span>; <span class="id">cbn</span>; <span class="tactic">intros</span>. <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">D</span>; <span class="tactic">split</span>; <span class="tactic">intros</span> <span class="id">l</span>; <span class="tactic">destruct</span> (<span class="id">D</span> <span class="id">l</span>); <span class="tactic">auto</span>; <span class="tactic">destruct</span> (<span class="id">h1</span> <span class="id">l</span>); <span class="tactic">auto</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">discriminate</span>.<br/>
@@ -164,8 +164,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="hdisjoint_union_r">hdisjoint_union_r</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">h3</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h2</span> <span class="id">h3</span>) &lt;-&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> <span class="id">h2</span> /\ <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> <span class="id">h3</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof132')">Proof.</div>
-<div class="proofscript" id="proof132">
+<div class="toggleproof" onclick="toggleDisplay('proof270')">Proof.</div>
+<div class="proofscript" id="proof270">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hdisjoint_sym">hdisjoint_sym</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hdisjoint_union_l">hdisjoint_union_l</a></span>. <br/>
 &nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Separation.html#hdisjoint_sym">hdisjoint_sym</a></span> <span class="id">h2</span>), (<span class="id"><a href="CDF.Separation.html#hdisjoint_sym">hdisjoint_sym</a></span> <span class="id">h3</span>). <span class="tactic">tauto</span>.<br/>
 Qed.</div>
@@ -203,8 +203,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="hunion_invert_r">hunion_invert_r</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">h</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h</span> <span class="id">h1</span> = <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h</span> <span class="id">h2</span> -&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h</span> <span class="id">h1</span> -&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h</span> <span class="id">h2</span> -&gt; <span class="id">h1</span> = <span class="id">h2</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof133')">Proof.</div>
-<div class="proofscript" id="proof133">
+<div class="toggleproof" onclick="toggleDisplay('proof271')">Proof.</div>
+<div class="proofscript" id="proof271">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#heap_extensionality">heap_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">l</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h</span> <span class="id">h1</span> <span class="id">l</span> = <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h</span> <span class="id">h2</span> <span class="id">l</span>) <span class="tactic">by</span> <span class="tactic">congruence</span>.<br/>
 &nbsp;&nbsp;<span class="id">cbn</span> <span class="kwd">in</span> <span class="id">H2</span>. <span class="id">specialize</span> (<span class="id">H0</span> <span class="id">l</span>); <span class="id">specialize</span> (<span class="id">H1</span> <span class="id">l</span>). <span class="tactic">destruct</span> (<span class="id">h</span> <span class="id">l</span>); <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
@@ -213,8 +213,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="hunion_invert_l">hunion_invert_l</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">h</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h</span> = <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h2</span> <span class="id">h</span> -&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h1</span> <span class="id">h</span> -&gt; <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h2</span> <span class="id">h</span> -&gt; <span class="id">h1</span> = <span class="id">h2</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof134')">Proof.</div>
-<div class="proofscript" id="proof134">
+<div class="toggleproof" onclick="toggleDisplay('proof272')">Proof.</div>
+<div class="proofscript" id="proof272">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#hunion_invert_r">hunion_invert_r</a></span> <span class="kwd">with</span> <span class="id">h</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- ! (<span class="id"><a href="CDF.Separation.html#hunion_comm">hunion_comm</a></span> <span class="id">h</span>) <span class="tactic">by</span> <span class="id">HDISJ</span>. <span class="tactic">auto</span>.<br/>
 &nbsp;&nbsp;<span class="id">HDISJ</span>. <span class="id">HDISJ</span>.<br/>
@@ -287,8 +287,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="assertion_extensionality">assertion_extensionality</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">P</span> <span class="id">Q</span>: <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>),<br/>
 &nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">h</span>, <span class="id">P</span> <span class="id">h</span> &lt;-&gt; <span class="id">Q</span> <span class="id">h</span>) -&gt; <span class="id">P</span> = <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof135')">Proof.</div>
-<div class="proofscript" id="proof135">
+<div class="toggleproof" onclick="toggleDisplay('proof273')">Proof.</div>
+<div class="proofscript" id="proof273">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html#functional_extensionality">functional_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">h</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.PropExtensionality.html#propositional_extensionality">propositional_extensionality</a></span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
@@ -296,8 +296,8 @@ Qed.</div>
 <h2> Properties of separating conjunction </h2>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_comm">sepconj_comm</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>, <span class="id">P</span> ** <span class="id">Q</span> = <span class="id">Q</span> ** <span class="id">P</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof136')">Proof.</div>
-<div class="proofscript" id="proof136">
+<div class="toggleproof" onclick="toggleDisplay('proof274')">Proof.</div>
+<div class="proofscript" id="proof274">
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">h</span>, (<span class="id">P</span> ** <span class="id">Q</span>) <span class="id">h</span> -&gt; (<span class="id">Q</span> ** <span class="id">P</span>) <span class="id">h</span>).<br/>
 &nbsp;&nbsp;{ <span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">P1</span> &amp; <span class="id">Q2</span> &amp; <span class="id">EQ</span> &amp; <span class="id">DISJ</span>); <span class="tactic">subst</span> <span class="id">h</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">h2</span>, <span class="id">h1</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
@@ -307,8 +307,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_assoc">sepconj_assoc</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>, (<span class="id">P</span> ** <span class="id">Q</span>) ** <span class="id">R</span> = <span class="id">P</span> ** (<span class="id">Q</span> ** <span class="id">R</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof137')">Proof.</div>
-<div class="proofscript" id="proof137">
+<div class="toggleproof" onclick="toggleDisplay('proof275')">Proof.</div>
+<div class="proofscript" id="proof275">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> (<span class="id">hx</span> &amp; <span class="id">h3</span> &amp; (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">P1</span> &amp; <span class="id">Q2</span> &amp; <span class="id">EQ</span> &amp; <span class="id">DISJ</span>) &amp; <span class="id">R3</span> &amp; <span class="id">EQ</span>' &amp; <span class="id">DISJ</span>'). <span class="tactic">subst</span> <span class="id">hx</span> <span class="id">h</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hdisjoint_union_l">hdisjoint_union_l</a></span> <span class="kwd">in</span> <span class="id">EQ</span>'. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hunion_assoc">hunion_assoc</a></span>.<br/>
@@ -323,8 +323,8 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_emp">sepconj_emp</a></span>: <span class="kwd">forall</span> <span class="id">P</span>, <span class="id"><a href="CDF.Separation.html#emp">emp</a></span> ** <span class="id">P</span> = <span class="id">P</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof138')">Proof.</div>
-<div class="proofscript" id="proof138">
+<div class="toggleproof" onclick="toggleDisplay('proof276')">Proof.</div>
+<div class="proofscript" id="proof276">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">EMP1</span> &amp; <span class="id">P2</span> &amp; <span class="id">EQ</span> &amp; <span class="id">DISJ</span>). <span class="tactic">red</span> <span class="kwd">in</span> <span class="id">EMP1</span>. <span class="tactic">subst</span> <span class="id">h</span> <span class="id">h1</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hunion_empty">hunion_empty</a></span>; <span class="tactic">auto</span>.<br/>
@@ -336,16 +336,16 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_imp_l">sepconj_imp_l</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
 &nbsp;&nbsp;(<span class="id">P</span> --&gt;&gt; <span class="id">Q</span>) -&gt; (<span class="id">P</span> ** <span class="id">R</span> --&gt;&gt; <span class="id">Q</span> ** <span class="id">R</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof139')">Proof.</div>
-<div class="proofscript" id="proof139">
+<div class="toggleproof" onclick="toggleDisplay('proof277')">Proof.</div>
+<div class="proofscript" id="proof277">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">IMP</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">P1</span> &amp; <span class="id">Q2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>).<br/>
 &nbsp;&nbsp;<span class="id">exists</span> <span class="id">h1</span>, <span class="id">h2</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_imp_r">sepconj_imp_r</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
 &nbsp;&nbsp;(<span class="id">P</span> --&gt;&gt; <span class="id">Q</span>) -&gt; (<span class="id">R</span> ** <span class="id">P</span> --&gt;&gt; <span class="id">R</span> ** <span class="id">Q</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof140')">Proof.</div>
-<div class="proofscript" id="proof140">
+<div class="toggleproof" onclick="toggleDisplay('proof278')">Proof.</div>
+<div class="proofscript" id="proof278">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> ! (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> <span class="id">R</span>). <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#sepconj_imp_l">sepconj_imp_l</a></span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
@@ -353,8 +353,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="pure_sep">pure_sep</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#pure">pure</a></span> (<span class="id">P</span> /\ <span class="id">Q</span>) = <span class="id"><a href="CDF.Separation.html#pure">pure</a></span> <span class="id">P</span> ** <span class="id"><a href="CDF.Separation.html#pure">pure</a></span> <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof141')">Proof.</div>
-<div class="proofscript" id="proof141">
+<div class="toggleproof" onclick="toggleDisplay('proof279')">Proof.</div>
+<div class="proofscript" id="proof279">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#pure">pure</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj">sepconj</a></span>. <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> ((<span class="id">A</span> &amp; <span class="id">B</span>) &amp; <span class="id">C</span>). <span class="tactic">subst</span> <span class="id">h</span>. <span class="id">exists</span> <span class="id"><a href="CDF.Separation.html#hempty">hempty</a></span>, <span class="id"><a href="CDF.Separation.html#hempty">hempty</a></span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
@@ -366,8 +366,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="pureconj_sepconj">pureconj_sepconj</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#pure">pure</a></span> <span class="id">P</span> ** <span class="id">Q</span> = <span class="id">P</span> //\\ <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof142')">Proof.</div>
-<div class="proofscript" id="proof142">
+<div class="toggleproof" onclick="toggleDisplay('proof280')">Proof.</div>
+<div class="proofscript" id="proof280">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#pure">pure</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj">sepconj</a></span>, <span class="id"><a href="CDF.Separation.html#pureconj">pureconj</a></span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; (<span class="id">A</span> &amp; <span class="id">B</span>) &amp; <span class="id">C</span> &amp; <span class="id">D</span> &amp; <span class="id">E</span>).<br/>
@@ -378,15 +378,15 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="lift_pureconj">lift_pureconj</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>, (<span class="id">P</span> //\\ <span class="id">Q</span>) ** <span class="id">R</span> = <span class="id">P</span> //\\ (<span class="id">Q</span> ** <span class="id">R</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof143')">Proof.</div>
-<div class="proofscript" id="proof143">
+<div class="toggleproof" onclick="toggleDisplay('proof281')">Proof.</div>
+<div class="proofscript" id="proof281">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- ! <span class="id"><a href="CDF.Separation.html#pureconj_sepconj">pureconj_sepconj</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="lift_aexists">lift_aexists</a></span>: <span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">P</span>: <span class="id">A</span> -&gt; <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>) <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#aexists">aexists</a></span> <span class="id">P</span> ** <span class="id">Q</span> = <span class="id"><a href="CDF.Separation.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">P</span> <span class="id">x</span> ** <span class="id">Q</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof144')">Proof.</div>
-<div class="proofscript" id="proof144">
+<div class="toggleproof" onclick="toggleDisplay('proof282')">Proof.</div>
+<div class="proofscript" id="proof282">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; (<span class="id">a</span> &amp; <span class="id">P1</span>) &amp; <span class="id">Q2</span> &amp; <span class="id">DISJ</span> &amp; <span class="id">EQ</span>).<br/>
 &nbsp;&nbsp;<span class="id">exists</span> <span class="id">a</span>, <span class="id">h1</span>, <span class="id">h2</span>; <span class="tactic">auto</span>.<br/>
@@ -395,26 +395,26 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_swap3">sepconj_swap3</a></span>: <span class="kwd">forall</span> <span class="id">R</span> <span class="id">P</span> <span class="id">Q</span>, <span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span> = <span class="id">R</span> ** <span class="id">P</span> ** <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof145')">Proof.</div>
-<div class="proofscript" id="proof145">
+<div class="toggleproof" onclick="toggleDisplay('proof283')">Proof.</div>
+<div class="proofscript" id="proof283">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_swap4">sepconj_swap4</a></span>: <span class="kwd">forall</span> <span class="id">S</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>, <span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span> ** <span class="id">S</span> = <span class="id">S</span> ** <span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof146')">Proof.</div>
-<div class="proofscript" id="proof146">
+<div class="toggleproof" onclick="toggleDisplay('proof284')">Proof.</div>
+<div class="proofscript" id="proof284">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_swap3">sepconj_swap3</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_pick2">sepconj_pick2</a></span>: <span class="kwd">forall</span> <span class="id">Q</span> <span class="id">P</span> <span class="id">R</span>, <span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span> = <span class="id">Q</span> ** <span class="id">P</span> ** <span class="id">R</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof147')">Proof.</div>
-<div class="proofscript" id="proof147">
+<div class="toggleproof" onclick="toggleDisplay('proof285')">Proof.</div>
+<div class="proofscript" id="proof285">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> <span class="id">Q</span>), &lt;- <span class="id"><a href="CDF.Separation.html#sepconj_assoc">sepconj_assoc</a></span>, <span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_pick3">sepconj_pick3</a></span>: <span class="kwd">forall</span> <span class="id">R</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">S</span>, <span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span> ** <span class="id">S</span> = <span class="id">R</span> ** <span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">S</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof148')">Proof.</div>
-<div class="proofscript" id="proof148">
+<div class="toggleproof" onclick="toggleDisplay('proof286')">Proof.</div>
+<div class="proofscript" id="proof286">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Separation.html#sepconj_pick2">sepconj_pick2</a></span> <span class="id">R</span>), (<span class="id"><a href="CDF.Separation.html#sepconj_pick2">sepconj_pick2</a></span> <span class="id">P</span>). <span class="tactic">auto</span>. <br/>
 Qed.</div>
 <br/>
@@ -427,16 +427,16 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_intro">wand_intro</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
 &nbsp;&nbsp;<span class="id">P</span> ** <span class="id">Q</span> --&gt;&gt; <span class="id">R</span>  -&gt;  <span class="id">P</span> --&gt;&gt; <span class="id">Q</span> --* <span class="id">R</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof149')">Proof.</div>
-<div class="proofscript" id="proof149">
+<div class="toggleproof" onclick="toggleDisplay('proof287')">Proof.</div>
+<div class="proofscript" id="proof287">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span> <span class="id">IMP</span> <span class="id">h</span> <span class="id">Ph</span> <span class="id">h</span>' <span class="id">DISJ</span> <span class="id">Qh</span>'.<br/>
 &nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IMP</span>. <span class="id">exists</span> <span class="id">h</span>, <span class="id">h</span>'; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_cancel">wand_cancel</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id">P</span> ** (<span class="id">P</span> --* <span class="id">Q</span>) --&gt;&gt; <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof150')">Proof.</div>
-<div class="proofscript" id="proof150">
+<div class="toggleproof" onclick="toggleDisplay('proof288')">Proof.</div>
+<div class="proofscript" id="proof288">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">Ph1</span> &amp; <span class="id">Wh2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>). <span class="tactic">subst</span> <span class="id">h</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">D</span>': <span class="id"><a href="CDF.Separation.html#hdisjoint">hdisjoint</a></span> <span class="id">h2</span> <span class="id">h1</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#hdisjoint_sym">hdisjoint_sym</a></span>; <span class="tactic">auto</span>).<br/>
 &nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hunion_comm">hunion_comm</a></span> <span class="tactic">by</span> <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id">Wh2</span>; <span class="tactic">auto</span>.<br/>
@@ -444,8 +444,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_charact">wand_charact</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;(<span class="id">P</span> --*<span class="id">Q</span>) = (<span class="id"><a href="CDF.Separation.html#aexists">aexists</a></span> (<span class="kwd">fun</span> <span class="id">R</span> =&gt; (<span class="id">P</span> ** <span class="id">R</span> --&gt;&gt; <span class="id">Q</span>) //\\ <span class="id">R</span>)).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof151')">Proof.</div>
-<div class="proofscript" id="proof151">
+<div class="toggleproof" onclick="toggleDisplay('proof289')">Proof.</div>
+<div class="proofscript" id="proof289">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">h</span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">W</span>. <span class="id">exists</span> (<span class="id">P</span> --* <span class="id">Q</span>). <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#wand_cancel">wand_cancel</a></span>.<br/>
 - <span class="tactic">intros</span> (<span class="id">R</span> &amp; <span class="id">A</span> &amp; <span class="id">B</span>) <span class="id">h</span>' <span class="id">D</span> <span class="id">Ph</span>'.<br/>
@@ -455,8 +455,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_equiv">wand_equiv</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
 &nbsp;&nbsp;(<span class="id">P</span> --&gt;&gt; (<span class="id">Q</span> --* <span class="id">R</span>)) &lt;-&gt; (<span class="id">P</span> ** <span class="id">Q</span> --&gt;&gt; <span class="id">R</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof152')">Proof.</div>
-<div class="proofscript" id="proof152">
+<div class="toggleproof" onclick="toggleDisplay('proof290')">Proof.</div>
+<div class="proofscript" id="proof290">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">split</span>; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">Ph1</span> &amp; <span class="id">Wh2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>). <span class="tactic">subst</span> <span class="id">h</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">auto</span>.<br/>
@@ -465,29 +465,29 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_imp_l">wand_imp_l</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">P</span>' <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;(<span class="id">P</span>' --&gt;&gt; <span class="id">P</span>) -&gt; (<span class="id">P</span> --* <span class="id">Q</span> --&gt;&gt; <span class="id">P</span>' --* <span class="id">Q</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof153')">Proof.</div>
-<div class="proofscript" id="proof153">
+<div class="toggleproof" onclick="toggleDisplay('proof291')">Proof.</div>
+<div class="proofscript" id="proof291">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">h</span> <span class="id">W</span> <span class="id">h</span>' <span class="id">DISJ</span> <span class="id">P</span>'<span class="id">h</span>'. <span class="tactic">apply</span> <span class="id">W</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_imp_r">wand_imp_r</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">Q</span>',<br/>
 &nbsp;&nbsp;(<span class="id">Q</span> --&gt;&gt; <span class="id">Q</span>') -&gt; (<span class="id">P</span> --* <span class="id">Q</span> --&gt;&gt; <span class="id">P</span> --* <span class="id">Q</span>').<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof154')">Proof.</div>
-<div class="proofscript" id="proof154">
+<div class="toggleproof" onclick="toggleDisplay('proof292')">Proof.</div>
+<div class="proofscript" id="proof292">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">h</span> <span class="id">W</span> <span class="id">h</span>' <span class="id">DISJ</span> <span class="id">Ph</span>'. <span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">apply</span> <span class="id">W</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_idem">wand_idem</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#emp">emp</a></span> --&gt;&gt; <span class="id">P</span> --* <span class="id">P</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof155')">Proof.</div>
-<div class="proofscript" id="proof155">
+<div class="toggleproof" onclick="toggleDisplay('proof293')">Proof.</div>
+<div class="proofscript" id="proof293">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">h</span> <span class="id">E</span>. <span class="tactic">rewrite</span> <span class="id">E</span>. <span class="tactic">red</span>. <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hunion_empty">hunion_empty</a></span>. <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_pure_l">wand_pure_l</a></span>: <span class="kwd">forall</span> (<span class="id">P</span>: <span class="kwd">Prop</span>) <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id">P</span> -&gt; (<span class="id"><a href="CDF.Separation.html#pure">pure</a></span> <span class="id">P</span> --* <span class="id">Q</span>) = <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof156')">Proof.</div>
-<div class="proofscript" id="proof156">
+<div class="toggleproof" onclick="toggleDisplay('proof294')">Proof.</div>
+<div class="proofscript" id="proof294">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">PP</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>. <span class="tactic">intros</span> <span class="id">h</span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">W</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="CDF.Separation.html#hunion_empty">hunion_empty</a></span>, <span class="id"><a href="CDF.Separation.html#hunion_comm">hunion_comm</a></span> <span class="tactic">by</span> <span class="id">HDISJ</span>. <span class="tactic">apply</span> <span class="id">W</span>. <span class="id">HDISJ</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">Qh</span> <span class="id">h</span>' <span class="id">DISJ</span> (<span class="id">Ph</span>' &amp; <span class="id">E</span>). <span class="tactic">subst</span> <span class="id">h</span>'. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hunion_comm">hunion_comm</a></span>, <span class="id"><a href="CDF.Separation.html#hunion_empty">hunion_empty</a></span> <span class="tactic">by</span> <span class="id">HDISJ</span>. <span class="tactic">auto</span>.<br/>
@@ -495,8 +495,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_curry">wand_curry</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
 &nbsp;&nbsp;(<span class="id">P</span> ** <span class="id">Q</span> --* <span class="id">R</span>) = (<span class="id">P</span> --* <span class="id">Q</span> --* <span class="id">R</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof157')">Proof.</div>
-<div class="proofscript" id="proof157">
+<div class="toggleproof" onclick="toggleDisplay('proof295')">Proof.</div>
+<div class="proofscript" id="proof295">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#assertion_extensionality">assertion_extensionality</a></span>; <span class="tactic">intros</span> <span class="id">h</span>; <span class="tactic">split</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">W</span> <span class="id">h1</span> <span class="id">D1</span> <span class="id">Ph1</span> <span class="id">h2</span> <span class="id">D2</span> <span class="id">Qh2</span>. <span class="tactic">rewrite</span> <span class="id"><a href="CDF.Separation.html#hunion_assoc">hunion_assoc</a></span>. <span class="tactic">apply</span> <span class="id">W</span>. <span class="id">HDISJ</span>. <span class="id">exists</span> <span class="id">h1</span>, <span class="id">h2</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>. <span class="id">HDISJ</span>.<br/>
 - <span class="tactic">intros</span> <span class="id">W</span> <span class="id">h</span>' <span class="id">D</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">Ph1</span> &amp; <span class="id">Qh2</span> &amp; <span class="id">D12</span> &amp; <span class="id">U12</span>). <span class="tactic">subst</span> <span class="id">h</span>'.<br/>
@@ -505,8 +505,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="wand_star">wand_star</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">R</span>,<br/>
 &nbsp;&nbsp;((<span class="id">P</span> --* <span class="id">Q</span>) ** <span class="id">R</span> ) --&gt;&gt; (<span class="id">P</span> --* (<span class="id">Q</span> ** <span class="id">R</span>)).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof158')">Proof.</div>
-<div class="proofscript" id="proof158">
+<div class="toggleproof" onclick="toggleDisplay('proof296')">Proof.</div>
+<div class="proofscript" id="proof296">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">intros</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">W1</span> &amp; <span class="id">R2</span> &amp; <span class="id">D</span> &amp; <span class="id">U</span>). <span class="tactic">subst</span> <span class="id">h</span>. <span class="tactic">intros</span> <span class="id">h</span>' <span class="id">D</span>' <span class="id">Ph</span>'.<br/>
 &nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h</span>'), <span class="id">h2</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">W1</span>; <span class="tactic">auto</span>. <span class="id">HDISJ</span>.<br/>
@@ -535,37 +535,37 @@ Qed.</div>
 <span class="kwd">Remark</span> <span class="id"><a name="param_precise_precise">param_precise_precise</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) (<span class="id">P</span>: <span class="id">X</span> -&gt; <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>),<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> <span class="id">P</span> -&gt; <span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id">P</span> <span class="id">x</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof159')">Proof.</div>
-<div class="proofscript" id="proof159">
+<div class="toggleproof" onclick="toggleDisplay('proof297')">Proof.</div>
+<div class="proofscript" id="proof297">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="id">edestruct</span> (<span class="id">H</span> <span class="id">x</span> <span class="id">x</span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">h1</span>' <span class="id">h2</span>'); <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Remark</span> <span class="id"><a name="precise_param_precise">precise_param_precise</a></span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span>, <span class="id"><a href="CDF.Separation.html#precise">precise</a></span> <span class="id">P</span> -&gt; <span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> (<span class="kwd">fun</span> <span class="id">_</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span> =&gt; <span class="id">P</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof160')">Proof.</div>
-<div class="proofscript" id="proof160">
+<div class="toggleproof" onclick="toggleDisplay('proof298')">Proof.</div>
+<div class="proofscript" id="proof298">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">split</span>. <span class="tactic">destruct</span> <span class="id">x1</span>, <span class="id">x2</span>; <span class="tactic">auto</span>. <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="pure_precise">pure_precise</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id"><a href="CDF.Separation.html#pure">pure</a></span> <span class="id">P</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof161')">Proof.</div>
-<div class="proofscript" id="proof161">
+<div class="toggleproof" onclick="toggleDisplay('proof299')">Proof.</div>
+<div class="proofscript" id="proof299">
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#pure">pure</a></span>; <span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">H2</span>, <span class="id">H3</span>. <span class="tactic">congruence</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="pure_param_precise">pure_param_precise</a></span>: <span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) (<span class="id">P</span>: <span class="id">X</span> -&gt; <span class="kwd">Prop</span>),<br/>
 &nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x1</span> <span class="id">x2</span>, <span class="id">P</span> <span class="id">x1</span> -&gt; <span class="id">P</span> <span class="id">x2</span> -&gt; <span class="id">x1</span> = <span class="id">x2</span>) -&gt;<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="CDF.Separation.html#pure">pure</a></span> (<span class="id">P</span> <span class="id">x</span>)).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof162')">Proof.</div>
-<div class="proofscript" id="proof162">
+<div class="toggleproof" onclick="toggleDisplay('proof300')">Proof.</div>
+<div class="proofscript" id="proof300">
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#pure">pure</a></span>; <span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">H3</span>, <span class="id">H4</span>. <span class="tactic">split</span>. <span class="tactic">auto</span>. <span class="tactic">congruence</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="contains_param_precise">contains_param_precise</a></span>: <span class="kwd">forall</span> <span class="id">l</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; <span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">l</span> <span class="id">v</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof163')">Proof.</div>
-<div class="proofscript" id="proof163">
+<div class="toggleproof" onclick="toggleDisplay('proof301')">Proof.</div>
+<div class="proofscript" id="proof301">
 &nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="CDF.Separation.html#contains">contains</a></span>; <span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">E</span>: <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span> <span class="id">h2</span> <span class="id">l</span> = <span class="id"><a href="CDF.Separation.html#hunion">hunion</a></span> <span class="id">h1</span>' <span class="id">h2</span>' <span class="id">l</span>) <span class="tactic">by</span> <span class="tactic">congruence</span>.<br/>
 &nbsp;&nbsp;<span class="id">cbn</span> <span class="kwd">in</span> <span class="id">E</span>. <span class="tactic">subst</span> <span class="id">h1</span> <span class="id">h1</span>'. <span class="tactic">rewrite</span> ! <span class="id"><a href="CDF.Separation.html#hupdate_same">hupdate_same</a></span> <span class="kwd">in</span> <span class="id">E</span>.<br/>
@@ -574,31 +574,31 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="contains_precise">contains_precise</a></span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id"><a href="CDF.Separation.html#contains">contains</a></span> <span class="id">l</span> <span class="id">v</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof164')">Proof.</div>
-<div class="proofscript" id="proof164">
+<div class="toggleproof" onclick="toggleDisplay('proof302')">Proof.</div>
+<div class="proofscript" id="proof302">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#param_precise_precise">param_precise_precise</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#contains_param_precise">contains_param_precise</a></span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="aexists_precise">aexists_precise</a></span>: <span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) (<span class="id">P</span>: <span class="id">X</span> -&gt; <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>),<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> <span class="id">P</span> -&gt; <span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id"><a href="CDF.Separation.html#aexists">aexists</a></span> <span class="id">P</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof165')">Proof.</div>
-<div class="proofscript" id="proof165">
+<div class="toggleproof" onclick="toggleDisplay('proof303')">Proof.</div>
+<div class="proofscript" id="proof303">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">H3</span> <span class="kwd">as</span> (<span class="id">x1</span> &amp; <span class="id">P1</span>), <span class="id">H4</span> <span class="kwd">as</span> (<span class="id">x2</span> &amp; <span class="id">P2</span>).<br/>
 &nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="valid_precise">valid_precise</a></span>: <span class="kwd">forall</span> <span class="id">l</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id"><a href="CDF.Separation.html#valid">valid</a></span> <span class="id">l</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof166')">Proof.</div>
-<div class="proofscript" id="proof166">
+<div class="toggleproof" onclick="toggleDisplay('proof304')">Proof.</div>
+<div class="proofscript" id="proof304">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#aexists_precise">aexists_precise</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#contains_param_precise">contains_param_precise</a></span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_param_precise">sepconj_param_precise</a></span>: <span class="kwd">forall</span> (<span class="id">X</span>: <span class="kwd">Type</span>) (<span class="id">P</span> <span class="id">Q</span>: <span class="id">X</span> -&gt; <span class="id"><a href="CDF.Separation.html#assertion">assertion</a></span>),<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> <span class="id">P</span> -&gt; (<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id">Q</span> <span class="id">x</span>)) -&gt;<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">P</span> <span class="id">x</span> ** <span class="id">Q</span> <span class="id">x</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof167')">Proof.</div>
-<div class="proofscript" id="proof167">
+<div class="toggleproof" onclick="toggleDisplay('proof305')">Proof.</div>
+<div class="proofscript" id="proof305">
 &nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <br/>
 &nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H4</span> <span class="kwd">as</span> (<span class="id">h3</span> &amp; <span class="id">h4</span> &amp; <span class="id">P3</span> &amp; <span class="id">Q4</span> &amp; <span class="id">D</span> &amp; <span class="id">E</span>). <br/>
 &nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H5</span> <span class="kwd">as</span> (<span class="id">h3</span>' &amp; <span class="id">h4</span>' &amp; <span class="id">P3</span>' &amp; <span class="id">Q4</span>' &amp; <span class="id">D</span>' &amp; <span class="id">E</span>').<br/>
@@ -619,8 +619,8 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_precise">sepconj_precise</a></span>: <span class="kwd">forall</span> <span class="id">P</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#precise">precise</a></span> <span class="id">P</span> -&gt; <span class="id"><a href="CDF.Separation.html#precise">precise</a></span> <span class="id">Q</span> -&gt; <span class="id"><a href="CDF.Separation.html#precise">precise</a></span> (<span class="id">P</span> ** <span class="id">Q</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof168')">Proof.</div>
-<div class="proofscript" id="proof168">
+<div class="toggleproof" onclick="toggleDisplay('proof306')">Proof.</div>
+<div class="proofscript" id="proof306">
 &nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="CDF.Separation.html#param_precise">param_precise</a></span> (<span class="kwd">fun</span> <span class="id">_</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span> =&gt; <span class="id">P</span> ** <span class="id">Q</span>)).<br/>
 &nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#sepconj_param_precise">sepconj_param_precise</a></span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#precise_param_precise">precise_param_precise</a></span>; <span class="tactic">auto</span>. <span class="tactic">auto</span>. }<br/>
@@ -631,16 +631,16 @@ Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_and_distr_1">sepconj_and_distr_1</a></span>: <span class="kwd">forall</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#aand">aand</a></span> <span class="id">P1</span> <span class="id">P2</span> ** <span class="id">Q</span> --&gt;&gt; <span class="id"><a href="CDF.Separation.html#aand">aand</a></span> (<span class="id">P1</span> ** <span class="id">Q</span>) (<span class="id">P2</span> ** <span class="id">Q</span>).<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof169')">Proof.</div>
-<div class="proofscript" id="proof169">
+<div class="toggleproof" onclick="toggleDisplay('proof307')">Proof.</div>
+<div class="proofscript" id="proof307">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; (<span class="id">P11</span> &amp; <span class="id">P21</span>) &amp; <span class="id">Q2</span> &amp; <span class="id">D</span> &amp; <span class="id">E</span>); <span class="tactic">split</span>; <span class="id">exists</span> <span class="id">h1</span>, <span class="id">h2</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_and_distr_2">sepconj_and_distr_2</a></span>: <span class="kwd">forall</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#precise">precise</a></span> <span class="id">Q</span> -&gt;<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#aand">aand</a></span> (<span class="id">P1</span> ** <span class="id">Q</span>) (<span class="id">P2</span> ** <span class="id">Q</span>) --&gt;&gt; <span class="id"><a href="CDF.Separation.html#aand">aand</a></span> <span class="id">P1</span> <span class="id">P2</span> ** <span class="id">Q</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof170')">Proof.</div>
-<div class="proofscript" id="proof170">
+<div class="toggleproof" onclick="toggleDisplay('proof308')">Proof.</div>
+<div class="proofscript" id="proof308">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">P1</span> <span class="id">P2</span> <span class="id">Q</span> <span class="id">PQ</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> <span class="id">P1</span>), (<span class="id"><a href="CDF.Separation.html#sepconj_comm">sepconj_comm</a></span> <span class="id">P2</span>). <br/>
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">h</span> ((<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">Q1</span> &amp; <span class="id">P12</span> &amp; <span class="id">D</span> &amp; <span class="id">E</span>) &amp; (<span class="id">h1</span>' &amp; <span class="id">h2</span>' &amp; <span class="id">Q1</span>' &amp; <span class="id">P22</span> &amp; <span class="id">D</span>' &amp; <span class="id">E</span>')).<br/>
@@ -658,8 +658,8 @@ Qed.</div>
 <span class="kwd">Lemma</span> <span class="id"><a name="sepconj_self">sepconj_self</a></span>: <span class="kwd">forall</span> <span class="id">P</span>,<br/>
 &nbsp;&nbsp;<span class="id"><a href="CDF.Separation.html#precise">precise</a></span> <span class="id">P</span> -&gt;<br/>
 &nbsp;&nbsp;<span class="id">P</span> ** <span class="id">P</span> --&gt;&gt; <span class="id">P</span>.<br/>
-<div class="toggleproof" onclick="toggleDisplay('proof171')">Proof.</div>
-<div class="proofscript" id="proof171">
+<div class="toggleproof" onclick="toggleDisplay('proof309')">Proof.</div>
+<div class="proofscript" id="proof309">
 &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">intros</span> <span class="id">h</span> (<span class="id">h1</span> &amp; <span class="id">h2</span> &amp; <span class="id">P1</span> &amp; <span class="id">P2</span> &amp; <span class="id">D</span> &amp; <span class="id">E</span>).<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">h1</span> = <span class="id">h2</span>). { <span class="tactic">apply</span> <span class="id">H</span> <span class="kwd">with</span> <span class="id">h2</span> <span class="id">h1</span>; <span class="tactic">auto</span>. <span class="id">HDISJ</span>. <span class="tactic">apply</span> <span class="id"><a href="CDF.Separation.html#hunion_comm">hunion_comm</a></span>; <span class="id">HDISJ</span>. }<br/>
 &nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">h2</span>.<br/>

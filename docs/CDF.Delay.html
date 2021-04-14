@@ -1,0 +1,95 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Delay</title>
+<meta name="description" content="Documentation of Coq module Delay" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Delay</h1>
+<div class="coq">
+<div class="doc">The <span class="bracket"><span class="id">delay</span></span> type and Capretta's partiality monad </div>
+<br/>
+<div class="doc">The type <span class="bracket"><span class="id">delay</span> <span class="id">A</span></span> represents computations that produce a result
+    of type <span class="bracket"><span class="id">A</span></span> if they terminate, but can also diverge. </div>
+<br/>
+<span class="kwd">CoInductive</span> <span class="id"><a name="delay">delay</a></span> (<span class="id">A</span>: <span class="kwd">Type</span>) :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="now">now</a></span> : <span class="id">A</span> -&gt; <span class="id">delay</span> <span class="id">A</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="later">later</a></span> : <span class="id">delay</span> <span class="id">A</span> -&gt; <span class="id">delay</span> <span class="id">A</span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="CDF.Delay.html#now">now</a></span> [<span class="id">A</span>].<br/>
+<span class="id">Arguments</span> <span class="id"><a href="CDF.Delay.html#later">later</a></span> [<span class="id">A</span>].<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="u_delay">u_delay</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">x</span>: <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">A</span>),<br/>
+&nbsp;&nbsp;<span class="id">x</span> = <span class="kwd">match</span> <span class="id">x</span> <span class="kwd">with</span> <span class="id"><a href="CDF.Delay.html#now">now</a></span> <span class="id">v</span> =&gt; <span class="id"><a href="CDF.Delay.html#now">now</a></span> <span class="id">v</span> | <span class="id"><a href="CDF.Delay.html#later">later</a></span> <span class="id">y</span> =&gt; <span class="id"><a href="CDF.Delay.html#later">later</a></span> <span class="id">y</span> <span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof94')">Proof.</div>
+<div class="proofscript" id="proof94">
+ <span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">auto</span>. Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">unroll_delay</span> <span class="id">X</span> := <span class="tactic">rewrite</span> (<span class="id"><a href="CDF.Delay.html#u_delay">u_delay</a></span> <span class="id">X</span>); <span class="id">cbn</span>.<br/>
+<br/>
+<div class="doc">The monad structure. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="ret">ret</a></span> := <span class="id"><a href="CDF.Delay.html#now">now</a></span>.<br/>
+<br/>
+<span class="kwd">CoFixpoint</span> <span class="id"><a name="bind">bind</a></span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} (<span class="id">d</span>: <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">A</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">B</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">d</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="CDF.Delay.html#now">now</a></span> <span class="id">v</span> =&gt; <span class="id"><a href="CDF.Delay.html#later">later</a></span> (<span class="id">f</span> <span class="id">v</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="CDF.Delay.html#later">later</a></span> <span class="id">d</span>' =&gt; <span class="id"><a href="CDF.Delay.html#later">later</a></span> (<span class="id">bind</span> <span class="id">d</span>' <span class="id">f</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">safe</span> <span class="id">Q</span> <span class="id">d</span></span> means: if the computation <span class="bracket"><span class="id">d</span></span> terminates,
+    its value satisfies predicate <span class="bracket"><span class="id">Q</span></span>.  It's like a postcondition
+    in a weak Hoare triple. </div>
+<br/>
+<span class="kwd">CoInductive</span> <span class="id"><a name="safe">safe</a></span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">Q</span>: <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) : <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">A</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="safe_now">safe_now</a></span>: <span class="kwd">forall</span> <span class="id">a</span>, <span class="id">Q</span> <span class="id">a</span> -&gt; <span class="id">safe</span> <span class="id">Q</span> (<span class="id"><a href="CDF.Delay.html#now">now</a></span> <span class="id">a</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="safe_later">safe_later</a></span>: <span class="kwd">forall</span> <span class="id">d</span>, <span class="id">safe</span> <span class="id">Q</span> <span class="id">d</span> -&gt; <span class="id">safe</span> <span class="id">Q</span> (<span class="id"><a href="CDF.Delay.html#later">later</a></span> <span class="id">d</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_inv_now">safe_inv_now</a></span>: <span class="kwd">forall</span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">Q</span>: <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) <span class="id">v</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q</span> (<span class="id"><a href="CDF.Delay.html#now">now</a></span> <span class="id">v</span>) -&gt; <span class="id">Q</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof95')">Proof.</div>
+<div class="proofscript" id="proof95">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">inversion</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_inv_later">safe_inv_later</a></span>: <span class="kwd">forall</span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">Q</span>: <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) <span class="id">d</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q</span> (<span class="id"><a href="CDF.Delay.html#later">later</a></span> <span class="id">d</span>) -&gt; <span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q</span> <span class="id">d</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof96')">Proof.</div>
+<div class="proofscript" id="proof96">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">inversion</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_consequence">safe_consequence</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">Q1</span> <span class="id">Q2</span>: <span class="id">A</span> -&gt; <span class="kwd">Prop</span>),<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">a</span>, <span class="id">Q1</span> <span class="id">a</span> -&gt; <span class="id">Q2</span> <span class="id">a</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">d</span>: <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">A</span>), <span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q1</span> <span class="id">d</span> -&gt; <span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q2</span> <span class="id">d</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof97')">Proof.</div>
+<div class="proofscript" id="proof97">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">Q2</span>; <span class="tactic">intros</span> <span class="id">IMP</span>. <span class="id">cofix</span> <span class="id">COINDHYP</span>; <span class="tactic">destruct</span> 1.<br/>
+- <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+- <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="safe_bind">safe_bind</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} (<span class="id">Q1</span>: <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">Q2</span>: <span class="id">B</span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">d</span>: <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">A</span>) (<span class="id">f</span>: <span class="id">A</span> -&gt; <span class="id"><a href="CDF.Delay.html#delay">delay</a></span> <span class="id">B</span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q1</span> <span class="id">d</span> -&gt; (<span class="kwd">forall</span> <span class="id">v</span>, <span class="id">Q1</span> <span class="id">v</span> -&gt; <span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q2</span> (<span class="id">f</span> <span class="id">v</span>)) -&gt; <span class="id"><a href="CDF.Delay.html#safe">safe</a></span> <span class="id">Q2</span> (<span class="id"><a href="CDF.Delay.html#bind">bind</a></span> <span class="id">d</span> <span class="id">f</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof98')">Proof.</div>
+<div class="proofscript" id="proof98">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">Q2</span>. <span class="id">cofix</span> <span class="id">COINDHYP</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">unroll_delay</span> (<span class="id"><a href="CDF.Delay.html#bind">bind</a></span> <span class="id">d</span> <span class="id">f</span>). <span class="tactic">destruct</span> <span class="id">d</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Delay.html#safe_inv_now">safe_inv_now</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">constructor</span>. <span class="tactic">apply</span> <span class="id">H0</span>. <span class="tactic">auto</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="CDF.Delay.html#safe_inv_later">safe_inv_later</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">constructor</span>. <span class="tactic">apply</span> <span class="id">COINDHYP</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>
